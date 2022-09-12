@@ -1,6 +1,6 @@
 // ***************************************************************************
 // ***************************************************************************
-// Copyright 2014 - 2017 (c) Analog Devices, Inc. All rights reserved.
+// Copyright 2014 - 2022 (c) Analog Devices, Inc. All rights reserved.
 //
 // In this HDL repository, there are many different and unique modules, consisting
 // of various HDL (Verilog or VHDL) components. The individual modules are
@@ -78,7 +78,7 @@ module ad_data_out #(
     (FPGA_TECHNOLOGY == ULTRASCALE) ? "ULTRASCALE" : "7SERIES";
 
   localparam  IODELAY_FPGA_TECHNOLOGY = (IODELAY_ENABLE == 1) ? FPGA_TECHNOLOGY : NONE;
-  localparam  IODELAY_SIM_DEVICE = (FPGA_TECHNOLOGY == ULTRASCALE_PLUS) ? "ULTRASCALE_PLUS_ES1" :
+  localparam  IODELAY_SIM_DEVICE = (FPGA_TECHNOLOGY == ULTRASCALE_PLUS) ? "ULTRASCALE_PLUS" :
     (FPGA_TECHNOLOGY == ULTRASCALE) ? "ULTRASCALE" : "7SERIES";
 
   // internal signals
@@ -90,80 +90,115 @@ module ad_data_out #(
 
   generate
   if (IODELAY_CTRL_ENABLED == 0) begin
-  assign delay_locked = 1'b1;
+    assign delay_locked = 1'b1;
   end else begin
-  (* IODELAY_GROUP = IODELAY_GROUP *)
-  IDELAYCTRL #(
-    .SIM_DEVICE (IODELAY_CTRL_SIM_DEVICE)
-  ) i_delay_ctrl (
-    .RST (delay_rst),
-    .REFCLK (delay_clk),
-    .RDY (delay_locked));
+    (* IODELAY_GROUP = IODELAY_GROUP *)
+    IDELAYCTRL #(
+      .SIM_DEVICE (IODELAY_CTRL_SIM_DEVICE)
+    ) i_delay_ctrl (
+      .RST (delay_rst),
+      .REFCLK (delay_clk),
+      .RDY (delay_locked));
   end
   endgenerate
 
   // transmit data interface, oddr -> odelay -> obuf
 
   generate
-  if ((FPGA_TECHNOLOGY == ULTRASCALE) || (FPGA_TECHNOLOGY == ULTRASCALE_PLUS)) begin
-  ODDRE1 i_tx_data_oddr (
-    .SR (1'b0),
-    .C (tx_clk),
-    .D1 (tx_data_n),
-    .D2 (tx_data_p),
-    .Q (tx_data_oddr_s));
+  if ((FPGA_TECHNOLOGY == ULTRASCALE_PLUS)
+    || (FPGA_TECHNOLOGY == ULTRASCALE)) begin
+    ODDRE1 #(
+      .SIM_DEVICE (IODELAY_SIM_DEVICE)
+    ) i_tx_data_oddr (
+      .SR (1'b0),
+      .C (tx_clk),
+      .D1 (tx_data_n),
+      .D2 (tx_data_p),
+      .Q (tx_data_oddr_s));
   end
   endgenerate
 
   generate
   if (FPGA_TECHNOLOGY == SEVEN_SERIES) begin
-  ODDR #(
-    .DDR_CLK_EDGE (IDDR_CLK_EDGE)
-  ) i_tx_data_oddr (
-    .CE (1'b1),
-    .R (1'b0),
-    .S (1'b0),
-    .C (tx_clk),
-    .D1 (tx_data_n),
-    .D2 (tx_data_p),
-    .Q (tx_data_oddr_s));
+    ODDR #(
+      .DDR_CLK_EDGE (IDDR_CLK_EDGE)
+    ) i_tx_data_oddr (
+      .CE (1'b1),
+      .R (1'b0),
+      .S (1'b0),
+      .C (tx_clk),
+      .D1 (tx_data_n),
+      .D2 (tx_data_p),
+      .Q (tx_data_oddr_s));
   end
   endgenerate
 
   // odelay
 
   generate
+  if ((IODELAY_FPGA_TECHNOLOGY == ULTRASCALE_PLUS)
+    || (IODELAY_FPGA_TECHNOLOGY == ULTRASCALE)) begin
+
+    (* IODELAY_GROUP = IODELAY_GROUP *)
+    ODELAYE3 #(
+      .CASCADE ("NONE"),
+      .DELAY_FORMAT ("COUNT"),
+      .DELAY_TYPE ("VAR_LOAD"),
+      .DELAY_VALUE (0),
+      .IS_CLK_INVERTED (1'b0),
+      .IS_RST_INVERTED (1'b0),
+      .REFCLK_FREQUENCY (REFCLK_FREQUENCY),
+      .SIM_DEVICE (IODELAY_SIM_DEVICE),
+      .UPDATE_MODE ("ASYNC")
+    ) i_tx_data_odelay (
+      .CASC_RETURN (1'b0),
+      .CASC_IN (1'b0),
+      .CASC_OUT (),
+      .CE (1'b0),
+      .CLK (up_clk),
+      .INC (1'b0),
+      .LOAD (up_dld),
+      .CNTVALUEIN (up_dwdata),
+      .CNTVALUEOUT (up_drdata),
+      .ODATAIN (tx_data_oddr_s),
+      .DATAOUT (tx_data_odelay_s),
+      .RST (1'b0),
+      .EN_VTC (~up_dld));
+  end
+  endgenerate
+
+  generate
   if (IODELAY_FPGA_TECHNOLOGY == SEVEN_SERIES) begin
-  (* IODELAY_GROUP = IODELAY_GROUP *)
-  ODELAYE2 #(
-    .CINVCTRL_SEL ("FALSE"),
-    .DELAY_SRC ("ODATAIN"),
-    .HIGH_PERFORMANCE_MODE ("FALSE"),
-    .ODELAY_TYPE ("VAR_LOAD"),
-    .ODELAY_VALUE (0),
-    .REFCLK_FREQUENCY (REFCLK_FREQUENCY),
-    .PIPE_SEL ("FALSE"),
-    .SIGNAL_PATTERN ("DATA")
-  ) i_tx_data_odelay (
-    .CE (1'b0),
-    .CLKIN (1'b0),
-    .INC (1'b0),
-    .LDPIPEEN (1'b0),
-    .CINVCTRL (1'b0),
-    .REGRST (1'b0),
-    .C (up_clk),
-    .ODATAIN (tx_data_oddr_s),
-    .DATAOUT (tx_data_odelay_s),
-    .LD (up_dld),
-    .CNTVALUEIN (up_dwdata),
-    .CNTVALUEOUT (up_drdata));
+    (* IODELAY_GROUP = IODELAY_GROUP *)
+    ODELAYE2 #(
+      .CINVCTRL_SEL ("FALSE"),
+      .DELAY_SRC ("ODATAIN"),
+      .HIGH_PERFORMANCE_MODE ("FALSE"),
+      .ODELAY_TYPE ("VAR_LOAD"),
+      .ODELAY_VALUE (0),
+      .REFCLK_FREQUENCY (REFCLK_FREQUENCY),
+      .PIPE_SEL ("FALSE"),
+      .SIGNAL_PATTERN ("DATA")
+    ) i_tx_data_odelay (
+      .CE (1'b0),
+      .CLKIN (1'b0),
+      .INC (1'b0),
+      .LDPIPEEN (1'b0),
+      .CINVCTRL (1'b0),
+      .REGRST (1'b0),
+      .C (up_clk),
+      .ODATAIN (tx_data_oddr_s),
+      .DATAOUT (tx_data_odelay_s),
+      .LD (up_dld),
+      .CNTVALUEIN (up_dwdata),
+      .CNTVALUEOUT (up_drdata));
   end
   endgenerate
 
   generate
   if (IODELAY_FPGA_TECHNOLOGY == NONE) begin
-  assign up_drdata = 5'd0;
-  assign tx_data_odelay_s = tx_data_oddr_s;
+    assign up_drdata = 5'd0;
+    assign tx_data_odelay_s = tx_data_oddr_s;
   end
   endgenerate
 
@@ -171,15 +206,15 @@ module ad_data_out #(
 
   generate
   if (SINGLE_ENDED == 1) begin
-  assign tx_data_out_n = 1'b0;
-  OBUF i_tx_data_obuf (
-    .I (tx_data_odelay_s),
-    .O (tx_data_out_p));
+    assign tx_data_out_n = 1'b0;
+    OBUF i_tx_data_obuf (
+      .I (tx_data_odelay_s),
+      .O (tx_data_out_p));
   end else begin
-  OBUFDS i_tx_data_obuf (
-    .I (tx_data_odelay_s),
-    .O (tx_data_out_p),
-    .OB (tx_data_out_n));
+    OBUFDS i_tx_data_obuf (
+      .I (tx_data_odelay_s),
+      .O (tx_data_out_p),
+      .OB (tx_data_out_n));
   end
   endgenerate
 
