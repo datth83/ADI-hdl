@@ -1,4 +1,3 @@
-
 source ../../../scripts/adi_env.tcl
 source $ad_hdl_dir/projects/scripts/adi_project_xilinx.tcl
 source $ad_hdl_dir/projects/scripts/adi_board.tcl
@@ -31,7 +30,9 @@ source $ad_hdl_dir/projects/scripts/adi_board.tcl
 
 #      make JESD_MODE=64B66B RX_LANE_RATE=24.75 TX_LANE_RATE=24.75 RX_JESD_M=4 RX_JESD_L=4 RX_JESD_S=2 RX_JESD_NP=12 TX_JESD_M=4 TX_JESD_L=4 TX_JESD_S=2 TX_JESD_NP=12
 
-adi_project ad9081_fmca_ebz_vck190 0 [list \
+set project_name [get_env_param ADI_PROJECT_NAME ad9081_fmca_ebz_vck190]
+
+adi_project $project_name 0 [list \
   JESD_MODE         [get_env_param JESD_MODE     64B66B ]\
   RX_LANE_RATE      [get_env_param RX_LANE_RATE   11.88 ] \
   TX_LANE_RATE      [get_env_param TX_LANE_RATE   11.88 ] \
@@ -50,7 +51,7 @@ adi_project ad9081_fmca_ebz_vck190 0 [list \
   TX_KS_PER_CHANNEL [get_env_param TX_KS_PER_CHANNEL 64 ] \
 ]
 
-adi_project_files ad9081_fmca_ebz_vck190 [list \
+adi_project_files $project_name [list \
   "system_top.v" \
   "system_constr.xdc"\
   "timing_constr.xdc"\
@@ -60,5 +61,5 @@ adi_project_files ad9081_fmca_ebz_vck190 [list \
 
 set_property strategy Performance_Explore [get_runs impl_1]
 
-adi_project_run ad9081_fmca_ebz_vck190
+adi_project_run $project_name
 

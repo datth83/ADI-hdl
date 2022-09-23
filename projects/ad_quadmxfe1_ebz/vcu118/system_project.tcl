@@ -1,4 +1,3 @@
-
 source ../../../scripts/adi_env.tcl
 source $ad_hdl_dir/projects/scripts/adi_project_xilinx.tcl
 source $ad_hdl_dir/projects/scripts/adi_board.tcl
@@ -36,7 +35,9 @@ source $ad_hdl_dir/projects/scripts/adi_board.tcl
 #    [RX/TX]_KS_PER_CHANNEL : Number of samples stored in internal buffers in kilosamples per converter (M)
 #
 
-adi_project ad_quadmxfe1_ebz_vcu118 0 [list \
+set project_name [get_env_param ADI_PROJECT_NAME ad_quadmxfe1_ebz_vcu118]
+
+adi_project $project_name 0 [list \
   JESD_MODE            [get_env_param JESD_MODE       64B66B ] \
   RX_LANE_RATE         [get_env_param RX_LANE_RATE      16.5 ] \
   TX_LANE_RATE         [get_env_param TX_LANE_RATE      16.5 ] \
@@ -58,7 +59,7 @@ adi_project ad_quadmxfe1_ebz_vcu118 0 [list \
   DAC_TPL_XBAR_ENABLE  [get_env_param DAC_TPL_XBAR_ENABLE  0 ] \
 ]
 
-adi_project_files ad_quadmxfe1_ebz_vcu118 [list \
+adi_project_files $project_name [list \
   "system_top.v" \
   "system_constr.xdc" \
   "timing_constr.xdc" \
@@ -69,5 +70,5 @@ adi_project_files ad_quadmxfe1_ebz_vcu118 [list \
 
 set_property strategy Performance_RefinePlacement [get_runs impl_1]
 
-adi_project_run ad_quadmxfe1_ebz_vcu118
+adi_project_run $project_name
 

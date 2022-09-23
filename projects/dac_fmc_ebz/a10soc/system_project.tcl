@@ -29,13 +29,14 @@
 #      This will allow to generate bit files and not release the source code,
 #      as long as it attaches to an ADI device.
 #
-
 source ../../../scripts/adi_env.tcl
 source ../../scripts/adi_project_intel.tcl
 
 source ../common/config.tcl
 
-adi_project dac_fmc_ebz_a10soc [list \
+set project_name [get_env_param ADI_PROJECT_NAME dac_fmc_ebz_a10soc]
+
+adi_project $project_name [list \
   JESD_L        [get_config_param L] \
   MODE          $mode \
   DEVICE        $device \

@@ -1,4 +1,3 @@
-
 source ../../../scripts/adi_env.tcl
 source $ad_hdl_dir/projects/scripts/adi_project_xilinx.tcl
 source $ad_hdl_dir/projects/scripts/adi_board.tcl
@@ -30,27 +29,29 @@ if {[info exists ::env(SI_OR_PI)]} {
   set S_SI_OR_PI 0
 }
 
-adi_project ad7616_sdz_zed 0 [list \
+set project_name [get_env_param ADI_PROJECT_NAME ad7616_sdz_zed]
+
+adi_project $project_name 0 [list \
   SI_OR_PI  $S_SI_OR_PI \
 ]
 
-adi_project_files ad7616_sdz_zed [list \
+adi_project_files $project_name [list \
   "$ad_hdl_dir/library/common/ad_iobuf.v" \
   "$ad_hdl_dir/projects/common/zed/zed_system_constr.xdc"]
 
 switch $S_SI_OR_PI {
   0 {
-    adi_project_files ad7616_sdz_zed [list \
+    adi_project_files $project_name [list \
       "system_top_si.v" \
       "serial_if_constr.xdc"
     ]
   }
   1 {
-    adi_project_files ad7616_sdz_zed [list \
+    adi_project_files $project_name [list \
       "system_top_pi.v" \
       "parallel_if_constr.xdc"
     ]
   }
 }  
 
-adi_project_run ad7616_sdz_zed
+adi_project_run $project_name

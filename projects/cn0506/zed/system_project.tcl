@@ -1,4 +1,3 @@
-
 source ../../../scripts/adi_env.tcl
 source $ad_hdl_dir/projects/scripts/adi_project_xilinx.tcl
 source $ad_hdl_dir/projects/scripts/adi_board.tcl
@@ -30,11 +29,13 @@ if {[info exists ::env(INTF_CFG)]} {
   set env(INTF_CFG) $intf
 }
 
-adi_project cn0506_zed 0 [list \
+set project_name [get_env_param ADI_PROJECT_NAME cn0506_rmii_zed]
+
+adi_project $project_name 0 [list \
   INTF_CFG  $intf \
 ]
 
-adi_project_files  cn0506_rmii_zed [list \
+adi_project_files $project_name [list \
   "$ad_hdl_dir/projects/common/zed/zed_system_constr.xdc" \
   "$ad_hdl_dir/library/common/ad_iobuf.v" \
   "system_constr.tcl"
@@ -42,17 +43,17 @@ adi_project_files  cn0506_rmii_zed [list \
 
 switch $intf {
   MII {
-    adi_project_files cn0506_zed [list \
+    adi_project_files $project_name [list \
       "system_top_mii.v" ]
   }
   RGMII {
-    adi_project_files cn0506_zed [list \
+    adi_project_files $project_name [list \
       "system_top_rgmii.v" ]
   }
   RMII {
-    adi_project_files cn0506_zed [list \
+    adi_project_files $project_name [list \
       "system_top_rmii.v" ]
   }
 }
 
-adi_project_run cn0506_zed
+adi_project_run $project_name

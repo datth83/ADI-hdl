@@ -1,4 +1,3 @@
-
 source ../../../scripts/adi_env.tcl
 source $ad_hdl_dir/projects/scripts/adi_project_xilinx.tcl
 source $ad_hdl_dir/projects/scripts/adi_board.tcl
@@ -21,16 +20,18 @@ source $ad_hdl_dir/projects/scripts/adi_board.tcl
 ##
 set AD40XX_ADAQ400X_N [get_env_param AD40XX_ADAQ400X_N 1]
 
-adi_project ad40xx_fmc_zed
+set project_name [get_env_param ADI_PROJECT_NAME ad40xx_fmc_zed]
+
+adi_project $project_name
 
 if {$AD40XX_ADAQ400X_N == 1} {
-  adi_project_files ad40xx_fmc_zed [list \
+  adi_project_files $project_name [list \
       "$ad_hdl_dir/library/common/ad_iobuf.v" \
       "system_top_ad40xx.v" \
       "system_constr_ad40xx.xdc" \
       "$ad_hdl_dir/projects/common/zed/zed_system_constr.xdc"]
 } elseif {$AD40XX_ADAQ400X_N == 0} {
-  adi_project_files ad40xx_fmc_zed [list \
+  adi_project_files $project_name [list \
       "$ad_hdl_dir/library/common/ad_iobuf.v" \
       "system_top_adaq400x.v" \
       "system_constr_adaq400x.xdc" \
@@ -40,5 +41,5 @@ if {$AD40XX_ADAQ400X_N == 1} {
   return -code error [format "ERROR: Invalid eval board type! ..."]
 }
 
-adi_project_run ad40xx_fmc_zed
+adi_project_run $project_name
 

@@ -1,4 +1,3 @@
-
 source ../../../scripts/adi_env.tcl
 source $ad_hdl_dir/projects/scripts/adi_project_xilinx.tcl
 source $ad_hdl_dir/projects/scripts/adi_board.tcl
@@ -18,14 +17,16 @@ source $ad_hdl_dir/projects/scripts/adi_board.tcl
 #   RX_JESD_S : Number of samples per frame
 #   RX_JESD_NP : Number of bits per sample
 
-adi_project fmcjesdadc1_zc706 0 [list \
+set project_name [get_env_param ADI_PROJECT_NAME fmcjesdadc1_zc706]
+
+adi_project $project_name 0 [list \
   RX_JESD_M    [get_env_param RX_JESD_M    4 ] \
   RX_JESD_L    [get_env_param RX_JESD_L    4 ] \
   RX_JESD_S    [get_env_param RX_JESD_S    1 ] \
   RX_JESD_NP   [get_env_param RX_JESD_NP   16] \
 ]
 
-adi_project_files fmcjesdadc1_zc706 [list \
+adi_project_files $project_name [list \
   "$ad_hdl_dir/library/common/ad_iobuf.v" \
   "$ad_hdl_dir/library/common/ad_sysref_gen.v" \
   "../common/fmcjesdadc1_spi.v" \
@@ -33,5 +34,5 @@ adi_project_files fmcjesdadc1_zc706 [list \
   "system_constr.xdc" \
   "$ad_hdl_dir/projects/common/zc706/zc706_system_constr.xdc" ]
 
-adi_project_run fmcjesdadc1_zc706
+adi_project_run $project_name
 
