@@ -1,0 +1,171 @@
+<: set ComponentName [getComponentNameString] :>
+<: setOutputDirectory "./" :>
+<: setFileName [ttcl_add $ComponentName "_constr"] :>
+<: setFileExtension ".xdc" :>
+<: setFileProcessingOrder late :>
+
+set_property ASYNC_REG TRUE \
+  [get_cells -hier {*cdc_sync_stage1_reg*}] \
+  [get_cells -hier {*cdc_sync_stage2_reg*}]
+
+set_false_path -from [get_cells -hierarchical * -filter {NAME=~*sync_adc_0_threshold/cdc_hold_reg*}] \
+               -to   [get_cells -hierarchical * -filter {NAME=~*sync_adc_0_threshold/out_data_reg*}] \
+  
+set_false_path -from [get_cells -hierarchical * -filter {NAME=~*sync_adc_1_threshold/cdc_hold_reg*}] \
+               -to   [get_cells -hierarchical * -filter {NAME=~*sync_adc_1_threshold/out_data_reg*}] \
+
+set_false_path -from [get_cells -hierarchical * -filter {NAME=~*sync_adc_2_threshold/cdc_hold_reg*}] \
+               -to   [get_cells -hierarchical * -filter {NAME=~*sync_adc_2_threshold/out_data_reg*}] \
+
+set_false_path -from [get_cells -hierarchical * -filter {NAME=~*sync_adc_3_threshold/cdc_hold_reg*}] \
+               -to   [get_cells -hierarchical * -filter {NAME=~*sync_adc_3_threshold/out_data_reg*}] \
+
+set_false_path -from [get_cells -hierarchical * -filter {NAME=~*sync_dac_0_min_value/cdc_hold_reg*}] \
+               -to   [get_cells -hierarchical * -filter {NAME=~*sync_dac_0_min_value/out_data_reg*}] \
+
+set_false_path -from [get_cells -hierarchical * -filter {NAME=~*sync_dac_1_min_value/cdc_hold_reg*}] \
+               -to   [get_cells -hierarchical * -filter {NAME=~*sync_dac_1_min_value/out_data_reg*}] \
+
+set_false_path -from [get_cells -hierarchical * -filter {NAME=~*sync_dac_2_min_value/cdc_hold_reg*}] \
+               -to   [get_cells -hierarchical * -filter {NAME=~*sync_dac_2_min_value/out_data_reg*}] \
+
+set_false_path -from [get_cells -hierarchical * -filter {NAME=~*sync_dac_3_min_value/cdc_hold_reg*}] \
+               -to   [get_cells -hierarchical * -filter {NAME=~*sync_dac_3_min_value/out_data_reg*}] \
+
+set_false_path -from [get_cells -hierarchical * -filter {NAME=~*sync_dac_0_max_value/cdc_hold_reg*}] \
+               -to   [get_cells -hierarchical * -filter {NAME=~*sync_dac_0_max_value/out_data_reg*}] \
+
+set_false_path -from [get_cells -hierarchical * -filter {NAME=~*sync_dac_1_max_value/cdc_hold_reg*}] \
+               -to   [get_cells -hierarchical * -filter {NAME=~*sync_dac_1_max_value/out_data_reg*}] \
+
+set_false_path -from [get_cells -hierarchical * -filter {NAME=~*sync_dac_2_max_value/cdc_hold_reg*}] \
+               -to   [get_cells -hierarchical * -filter {NAME=~*sync_dac_2_max_value/out_data_reg*}] \
+
+set_false_path -from [get_cells -hierarchical * -filter {NAME=~*sync_dac_3_max_value/cdc_hold_reg*}] \
+               -to   [get_cells -hierarchical * -filter {NAME=~*sync_dac_3_max_value/out_data_reg*}] \
+
+set_false_path -from [get_cells -hierarchical * -filter {NAME=~*sync_adc_0_delay_prescaler/cdc_hold_reg*}] \
+               -to   [get_cells -hierarchical * -filter {NAME=~*sync_adc_0_delay_prescaler/out_data_reg*}] \
+
+set_false_path -from [get_cells -hierarchical * -filter {NAME=~*sync_adc_1_delay_prescaler/cdc_hold_reg*}] \
+               -to   [get_cells -hierarchical * -filter {NAME=~*sync_adc_1_delay_prescaler/out_data_reg*}] \
+
+set_false_path -from [get_cells -hierarchical * -filter {NAME=~*sync_adc_2_delay_prescaler/cdc_hold_reg*}] \
+               -to   [get_cells -hierarchical * -filter {NAME=~*sync_adc_2_delay_prescaler/out_data_reg*}] \
+
+set_false_path -from [get_cells -hierarchical * -filter {NAME=~*sync_adc_3_delay_prescaler/cdc_hold_reg*}] \
+               -to   [get_cells -hierarchical * -filter {NAME=~*sync_adc_3_delay_prescaler/out_data_reg*}] \
+
+
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_adc_0_threshold/out_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_adc_0_threshold/i_sync_in/cdc_sync_stage1_reg[0]/D}]
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_adc_0_threshold/in_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_adc_0_threshold/i_sync_out/cdc_sync_stage1_reg[0]/D}]
+
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_adc_1_threshold/out_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_adc_1_threshold/i_sync_in/cdc_sync_stage1_reg[0]/D}]
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_adc_1_threshold/in_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_adc_1_threshold/i_sync_out/cdc_sync_stage1_reg[0]/D}]
+
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_adc_2_threshold/out_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_adc_2_threshold/i_sync_in/cdc_sync_stage1_reg[0]/D}]
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_adc_2_threshold/in_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_adc_2_threshold/i_sync_out/cdc_sync_stage1_reg[0]/D}]
+
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_adc_3_threshold/out_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_adc_3_threshold/i_sync_in/cdc_sync_stage1_reg[0]/D}]
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_adc_3_threshold/in_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_adc_3_threshold/i_sync_out/cdc_sync_stage1_reg[0]/D}]
+
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_dac_0_min_value/out_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_dac_0_min_value/i_sync_in/cdc_sync_stage1_reg[0]/D}]
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_dac_0_min_value/in_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_dac_0_min_value/i_sync_out/cdc_sync_stage1_reg[0]/D}]
+
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_dac_1_min_value/out_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_dac_1_min_value/i_sync_in/cdc_sync_stage1_reg[0]/D}]
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_dac_1_min_value/in_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_dac_1_min_value/i_sync_out/cdc_sync_stage1_reg[0]/D}]
+
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_dac_2_min_value/out_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_dac_2_min_value/i_sync_in/cdc_sync_stage1_reg[0]/D}]
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_dac_2_min_value/in_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_dac_2_min_value/i_sync_out/cdc_sync_stage1_reg[0]/D}]
+
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_dac_3_min_value/out_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_dac_3_min_value/i_sync_in/cdc_sync_stage1_reg[0]/D}]
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_dac_3_min_value/in_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_dac_3_min_value/i_sync_out/cdc_sync_stage1_reg[0]/D}]
+
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_dac_0_max_value/out_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_dac_0_max_value/i_sync_in/cdc_sync_stage1_reg[0]/D}]
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_dac_0_max_value/in_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_dac_0_max_value/i_sync_out/cdc_sync_stage1_reg[0]/D}]
+
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_dac_1_max_value/out_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_dac_1_max_value/i_sync_in/cdc_sync_stage1_reg[0]/D}]
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_dac_1_max_value/in_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_dac_1_max_value/i_sync_out/cdc_sync_stage1_reg[0]/D}]
+
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_dac_2_max_value/out_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_dac_2_max_value/i_sync_in/cdc_sync_stage1_reg[0]/D}]
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_dac_2_max_value/in_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_dac_2_max_value/i_sync_out/cdc_sync_stage1_reg[0]/D}]
+
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_dac_3_max_value/out_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_dac_3_max_value/i_sync_in/cdc_sync_stage1_reg[0]/D}]
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_dac_3_max_value/in_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_dac_3_max_value/i_sync_out/cdc_sync_stage1_reg[0]/D}]
+
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_adc_0_delay_prescaler/out_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_adc_0_delay_prescaler/i_sync_in/cdc_sync_stage1_reg[0]/D}]
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_adc_0_delay_prescaler/in_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_adc_0_delay_prescaler/i_sync_out/cdc_sync_stage1_reg[0]/D}]
+
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_adc_1_delay_prescaler/out_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_adc_1_delay_prescaler/i_sync_in/cdc_sync_stage1_reg[0]/D}]
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_adc_1_delay_prescaler/in_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_adc_1_delay_prescaler/i_sync_out/cdc_sync_stage1_reg[0]/D}]
+
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_adc_2_delay_prescaler/out_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_adc_2_delay_prescaler/i_sync_in/cdc_sync_stage1_reg[0]/D}]
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_adc_2_delay_prescaler/in_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_adc_2_delay_prescaler/i_sync_out/cdc_sync_stage1_reg[0]/D}]
+
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_adc_3_delay_prescaler/out_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_adc_3_delay_prescaler/i_sync_in/cdc_sync_stage1_reg[0]/D}]
+set_false_path \
+  -from [get_pins -hierarchical * -filter {NAME=~*sync_adc_3_delay_prescaler/in_toggle_d1_reg/C}] \
+  -to [get_pins -hierarchical * -filter {NAME=~*sync_adc_3_delay_prescaler/i_sync_out/cdc_sync_stage1_reg[0]/D}]
+

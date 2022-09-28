@@ -440,3 +440,34 @@ ad_cpu_interrupt ps-7 mb-7 /$hier_spi_engine_0/irq
 ad_cpu_interrupt ps-6 mb-6 /$hier_spi_engine_1/irq
 ad_cpu_interrupt ps-5 mb-5 axi_dac_0_dma/irq
 ad_cpu_interrupt ps-4 mb-4 axi_dac_1_dma/irq
+
+# ILA
+
+ad_ip_instance ila ila_adc
+ad_ip_parameter ila_adc CONFIG.C_MONITOR_TYPE Native
+ad_ip_parameter ila_adc CONFIG.C_TRIGIN_EN false
+ad_ip_parameter ila_adc CONFIG.C_EN_STRG_QUAL 1
+ad_ip_parameter ila_adc CONFIG.C_DATA_DEPTH 8192
+ad_ip_parameter ila_adc CONFIG.C_NUM_OF_PROBES 6
+ad_ip_parameter ila_adc CONFIG.C_PROBE0_WIDTH 16
+ad_ip_parameter ila_adc CONFIG.C_PROBE1_WIDTH 16
+ad_ip_parameter ila_adc CONFIG.C_PROBE2_WIDTH 16
+ad_ip_parameter ila_adc CONFIG.C_PROBE3_WIDTH 16
+ad_ip_parameter ila_adc CONFIG.C_PROBE4_WIDTH 32
+ad_ip_parameter ila_adc CONFIG.C_PROBE5_WIDTH 32
+
+ad_connect  sampling_clk ila_adc/clk
+ad_connect  dec_0_data_a ila_adc/probe0
+ad_connect  dec_0_data_b ila_adc/probe1
+ad_connect  dec_1_data_a ila_adc/probe2
+ad_connect  dec_1_data_b ila_adc/probe3
+ad_connect  dac_0_axis_tdata ila_adc/probe4
+ad_connect  dac_1_axis_tdata ila_adc/probe5
+
+set_property HDL_ATTRIBUTE.DEBUG true [get_bd_nets {axi_ltc2387_0_adc_data }]
+set_property HDL_ATTRIBUTE.DEBUG true [get_bd_nets {axi_ltc2387_1_adc_data }]
+set_property HDL_ATTRIBUTE.DEBUG true [get_bd_nets {axi_ltc2387_2_adc_data }]
+set_property HDL_ATTRIBUTE.DEBUG true [get_bd_nets {axi_ltc2387_3_adc_data }]
+set_property HDL_ATTRIBUTE.DEBUG true [get_bd_nets {s_axis_sample_1_tdata_1 }]
+set_property HDL_ATTRIBUTE.DEBUG true [get_bd_nets {s_axis_sample_1_tdata_2 }]
+
