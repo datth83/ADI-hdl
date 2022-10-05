@@ -84,9 +84,9 @@ module ad_data_in #(
 
   // internal signals
 
-  wire                rx_data_ibuf_s;
-  wire                rx_data_idelay_s;
-  wire        [ 8:0]  up_drdata_s;
+  wire          rx_data_ibuf_s;
+  wire          rx_data_idelay_s;
+  wire  [ 8:0]  up_drdata_s;
 
   // delay controller
 
@@ -105,6 +105,8 @@ module ad_data_in #(
   endgenerate
 
   // receive data interface, ibuf -> idelay -> iddr
+
+  // ibuf
 
   generate
   if (SINGLE_ENDED == 1) begin
@@ -154,26 +156,31 @@ module ad_data_in #(
     assign up_drdata = up_drdata_s[8:4];
     (* IODELAY_GROUP = IODELAY_GROUP *)
     IDELAYE3 #(
-      .SIM_DEVICE (IODELAY_SIM_DEVICE),
-      .DELAY_SRC ("IDATAIN"),
-      .DELAY_TYPE ("VAR_LOAD"),
-      .REFCLK_FREQUENCY (REFCLK_FREQUENCY),
-      .DELAY_FORMAT ("COUNT")
+      .CASCADE ("NONE"),                    // Cascade setting  (MASTER, NONE, SLAVE_END, SLAVE_MIDDLE)
+      .DELAY_FORMAT ("COUNT"),              // Units of the DELAY_VALUE  (COUNT, TIME)
+      .DELAY_SRC ("IDATAIN"),               // Delay input  (DATAIN, IDATAIN)
+      .DELAY_TYPE ("VAR_LOAD"),             // Set the type of tap delay line  (FIXED, VARIABLE, VAR_LOAD)
+      .DELAY_VALUE (0),                     // Input delay value setting
+      .IS_CLK_INVERTED (1'b0),              // Optional inversion for CLK
+      .IS_RST_INVERTED (1'b0),              // Optional inversion for RST
+      .REFCLK_FREQUENCY (REFCLK_FREQUENCY), // IDELAYCTRL clock input frequency in MHz  (200.0-800.0)
+      .SIM_DEVICE (IODELAY_SIM_DEVICE),     // Set the device version for simulation functionality
+      .UPDATE_MODE ("ASYNC")                // Determines when updates to the delay will take effect  (ASYNC, MANUAL, SYNC)
     ) i_rx_data_idelay (
-      .CASC_RETURN (1'b0),
-      .CASC_IN (1'b0),
-      .CASC_OUT (),
-      .CE (1'b0),
-      .CLK (up_clk),
-      .INC (1'b0),
-      .LOAD (up_dld),
-      .CNTVALUEIN ({up_dwdata, 4'd0}),
-      .CNTVALUEOUT (up_drdata_s),
-      .DATAIN (1'b0),
-      .IDATAIN (rx_data_ibuf_s),
-      .DATAOUT (rx_data_idelay_s),
-      .RST (1'b0),
-      .EN_VTC (~up_dld));
+      .CASC_RETURN (1'b0),              // 1-bit input: Cascade delay returning from slave ODELAY DATAOUT
+      .CASC_IN (1'b0),                  // 1-bit input: Cascade delay input from slave ODELAY CASCADE_OUT
+      .CASC_OUT (),                     // 1-bit output: Cascade delay output to ODELAY input cascade
+      .CE (1'b0),                       // 1-bit input: Active-High enable increment/decrement input
+      .CLK (up_clk),                    // 1-bit input: Clock input
+      .INC (1'b0),                      // 1-bit input: Increment / Decrement tap delay input
+      .LOAD (up_dld),                   // 1-bit input: Load DELAY_VALUE input
+      .CNTVALUEIN ({up_dwdata, 4'd0}),  // 9-bit input: Counter value input
+      .CNTVALUEOUT (up_drdata_s),       // 9-bit output: Counter value output
+      .DATAIN (1'b0),                   // 1-bit input: Data input from the logic
+      .IDATAIN (rx_data_ibuf_s),        // 1-bit input: Data input from the IOBUF
+      .DATAOUT (rx_data_idelay_s),      // 1-bit output: Delayed data output
+      .RST (1'b0),                      // 1-bit input: Asynchronous Reset to the DELAY_VALUE
+      .EN_VTC (~up_dld));               // 1-bit input: Keep delay constant over VT
   end
   endgenerate
 
@@ -187,31 +194,36 @@ module ad_data_in #(
   // iddr
 
   generate
-  if ((FPGA_TECHNOLOGY == ULTRASCALE) || (FPGA_TECHNOLOGY == ULTRASCALE_PLUS)) begin
-    IDDRE1 #(
-      .DDR_CLK_EDGE (IDDR_CLK_EDGE)
+  if (FPGA_TECHNOLOGY == SEVEN_SERIES) begin
+    IDDR #(
+      .DDR_CLK_EDGE (IDDR_CLK_EDGE), // "OPPOSITE_EDGE", "SAME_EDGE", "SAME_EDGE_PIPELINED"
+      .INIT_Q1 (1'b0),               // Initial value of Q1: 1'b0 or 1'b1
+      .INIT_Q2 (1'b0),               // Initial value of Q2: 1'b0 or 1'b1
+      .SRTYPE ("SYNC")               // Set/Reset type: "SYNC" or "ASYNC"
     ) i_rx_data_iddr (
-      .R (1'b0),
-      .C (rx_clk),
-      .CB (~rx_clk),
-      .D (rx_data_idelay_s),
-      .Q1 (rx_data_p),
-      .Q2 (rx_data_n));
+      .CE (1'b1),            // 1-bit clock enable input
+      .R (1'b0),             // 1-bit reset
+      .S (1'b0),             // 1-bit set
+      .C (rx_clk),           // 1-bit clock input
+      .D (rx_data_idelay_s), // 1-bit DDR data input
+      .Q1 (rx_data_p),       // 1-bit output for positive edge of clock
+      .Q2 (rx_data_n));      // 1-bit output for negative edge of clock
   end
   endgenerate
 
   generate
-  if (FPGA_TECHNOLOGY == SEVEN_SERIES) begin
-    IDDR #(
-      .DDR_CLK_EDGE (IDDR_CLK_EDGE)
+  if ((FPGA_TECHNOLOGY == ULTRASCALE) || (FPGA_TECHNOLOGY == ULTRASCALE_PLUS)) begin
+    IDDRE1 #(
+      .DDR_CLK_EDGE (IDDR_CLK_EDGE), // IDDRE1 mode (OPPOSITE_EDGE, SAME_EDGE, SAME_EDGE_PIPELINED)
+      .IS_CB_INVERTED (1'b0),         // Optional inversion for CB
+      .IS_C_INVERTED (1'b0)           // Optional inversion for C
     ) i_rx_data_iddr (
-      .CE (1'b1),
-      .R (1'b0),
-      .S (1'b0),
-      .C (rx_clk),
-      .D (rx_data_idelay_s),
-      .Q1 (rx_data_p),
-      .Q2 (rx_data_n));
+      .R (1'b0),             // 1-bit output: Registered parallel output 1
+      .C (rx_clk),           // 1-bit output: Registered parallel output 2
+      .CB (~rx_clk),         // 1-bit input: High-speed clock
+      .D (rx_data_idelay_s), // 1-bit input: Inversion of High-speed clock C
+      .Q1 (rx_data_p),       // 1-bit input: Serial Data Input
+      .Q2 (rx_data_n));      // 1-bit input: Active-High Async Reset
   end
   endgenerate
 
