@@ -42,6 +42,7 @@ module ad_serdes_in #(
   parameter   SERDES_FACTOR = 8,
   parameter   DATA_WIDTH = 16,
   parameter   DRP_WIDTH = 5,
+  parameter   IODELAY_ENABLE = 1,
   parameter   IODELAY_CTRL = 0,
   parameter   IODELAY_GROUP = "dev_if_delay_group",
   parameter   REFCLK_FREQUENCY = 200
@@ -81,6 +82,8 @@ module ad_serdes_in #(
   output                          delay_locked
 );
 
+  localparam IODELAY_CTRL_ENABLED = (IODELAY_ENABLE) ? IODELAY_CTRL : 0;
+
   localparam NONE = -1;
   localparam SEVEN_SERIES  = 1;
   localparam ULTRASCALE  = 2;
@@ -113,7 +116,7 @@ module ad_serdes_in #(
   // delay controller
 
   generate
-  if (IODELAY_CTRL == 1) begin
+  if (IODELAY_CTRL_ENABLED == 1) begin
     (* IODELAY_GROUP = IODELAY_GROUP *)
     IDELAYCTRL #(
       .SIM_DEVICE (SIM_DEVICE_IDELAYCTRL)
