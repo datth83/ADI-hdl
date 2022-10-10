@@ -111,7 +111,8 @@ module system_top (
   inout           ad4134_gpio5,
   inout           ad4134_gpio6,
   inout           ad4134_gpio7,
-  inout           ad4134_dclk_mode);
+  inout           ad4134_dclk_mode,
+  inout           ad4134_dclkio);
 
   // internal signals
 
@@ -127,14 +128,15 @@ module system_top (
 
   // instantiations
 
-  assign gpio_i[63:45] = gpio_o[63:45];
+  assign gpio_i[63:46] = gpio_o[63:46];
   ad_iobuf #(
-    .DATA_WIDTH(12)
+    .DATA_WIDTH(14)
   ) i_iobuf_ad4134_gpio (
-    .dio_t(gpio_t[44:32]),
-    .dio_i(gpio_o[44:32]),
-    .dio_o(gpio_i[44:32]),
-    .dio_p({ad4134_dclk_mode,   // [44]
+    .dio_t(gpio_t[45:32]),
+    .dio_i(gpio_o[45:32]),
+    .dio_o(gpio_i[45:32]),
+    .dio_p({ad4134_dclkio,      // [45]
+            ad4134_dclk_mode,   // [44]
             ad4134_gpio7,       // [43]
             ad4134_gpio6,       // [42]
             ad4134_gpio5,       // [41]
@@ -244,6 +246,3 @@ module system_top (
     .spdif (spdif));
 
 endmodule
-
-// ***************************************************************************
-// ***************************************************************************

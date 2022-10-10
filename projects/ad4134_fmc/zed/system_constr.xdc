@@ -29,6 +29,5 @@ set_property -dict {PACKAGE_PIN P21 IOSTANDARD LVCMOS25} [get_ports ad4134_gpio5
 set_property -dict {PACKAGE_PIN L17 IOSTANDARD LVCMOS25} [get_ports ad4134_gpio6]         ; ## FMC_LPC_LA13_P
 set_property -dict {PACKAGE_PIN M17 IOSTANDARD LVCMOS25} [get_ports ad4134_gpio7]         ; ## FMC_LPC_LA13_N
 set_property -dict {PACKAGE_PIN L21 IOSTANDARD LVCMOS25} [get_ports ad4134_pinbspi]       ; ## FMC_LPC_LA06_P
+set_property -dict {PACKAGE_PIN K19 IOSTANDARD LVCMOS25} [get_ports ad4134_dclkio]        ; ## FMC_LPC_LA14_P
 set_property -dict {PACKAGE_PIN K20 IOSTANDARD LVCMOS25} [get_ports ad4134_dclk_mode]     ; ## FMC_LPC_LA14_N
-
-set_false_path -to [get_pins -hierarchical * -filter {NAME=~*busy_sync/inst/cdc_sync_stage1_reg[0]/D}]
