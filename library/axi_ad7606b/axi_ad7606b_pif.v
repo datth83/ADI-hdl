@@ -1,6 +1,6 @@
 // ***************************************************************************
 // ***************************************************************************
-// Copyright 2022 (c) Analog Devices, Inc. All rights reserved.
+// Copyright 2014 - 2022 (c) Analog Devices, Inc. All rights reserved.
 //
 // In this HDL repository, there are many different and unique modules, consisting
 // of various HDL (Verilog or VHDL) components. The individual modules are
@@ -37,6 +37,7 @@
 
 module axi_ad7606b_pif #(
 
+  parameter UP_ADDRESS_WIDTH = 14,
   // adc read modes are  1=Simple, 2=status_header() 3=crc_enabled
   parameter ADC_READ_MODE = 1,
   parameter NEG_EDGE = 1
@@ -56,13 +57,22 @@ module axi_ad7606b_pif #(
   // FIFO interface
 
   output  reg [15:0]      adc_data_0,
+  output  reg [7:0]       adc_status_0='h0,
   output  reg [15:0]      adc_data_1,
+  output  reg [7:0]       adc_status_1='h0,
   output  reg [15:0]      adc_data_2,
+  output  reg [7:0]       adc_status_2='h0,
   output  reg [15:0]      adc_data_3,
+  output  reg [7:0]       adc_status_3='h0,
   output  reg [15:0]      adc_data_4,
+  output  reg [7:0]       adc_status_4='h0,
   output  reg [15:0]      adc_data_5,
+  output  reg [7:0]       adc_status_5='h0,
   output  reg [15:0]      adc_data_6,
+  output  reg [7:0]       adc_status_6='h0,
   output  reg [15:0]      adc_data_7,
+  output  reg [7:0]       adc_status_7='h0,
+  output                  adc_status,
   output  reg             adc_valid,
 
   // register access
@@ -94,8 +104,8 @@ module axi_ad7606b_pif #(
   reg         [ 2:0]  transfer_state = 3'h0;
   reg         [ 2:0]  transfer_state_next = 3'h0;
   reg         [ 3:0]  width_counter = 4'h0;
-  reg         [ 3:0]  channel_counter = 4'h0;
-  reg         [ 3:0]  nr_rd_burst = 4'h0;
+  reg         [ 4:0]  channel_counter = 5'h0;
+  reg         [ 4:0]  nr_rd_burst = 5'h0;
 
   reg                 wr_req_d = 1'h0;
   reg                 rd_req_d = 1'h0;
@@ -106,6 +116,8 @@ module axi_ad7606b_pif #(
   reg                 cs_high_d = 1'd0;
   reg                 read_ch_data = 1'd0;
 
+  reg         [ 7:0]  adc_status_er_ch_id;
+
   // internal wires
 
   wire                end_of_conv;
@@ -115,6 +127,9 @@ module axi_ad7606b_pif #(
 
   wire                cs_high_s;
   wire                cs_high_edge_s;
+
+  wire        [ 4:0]  adc_status_er_5b;
+  wire                adc_status_er;
 
   // instantiations
 
@@ -152,7 +167,7 @@ module axi_ad7606b_pif #(
 
   always @(posedge clk) begin
     if (rstn == 1'b0) begin
-      channel_counter <= 2'h0;
+      channel_counter <= 5'h0;
     end else begin
       if (rd_new_data_s == 1'b1 && read_ch_data == 1'b1) begin
         channel_counter <= channel_counter + 1;
@@ -173,55 +188,141 @@ module axi_ad7606b_pif #(
     end else begin
       if (ADC_READ_MODE == SIMPLE) begin
         first_data_d <= first_data;
-        nr_rd_burst = 4'd8;
+        nr_rd_burst = 5'd8;
         if (first_data & ~cs_n) begin
           read_ch_data <= 1'b1;
         end else if (channel_counter == 4'd8 && transfer_state == IDLE) begin
           read_ch_data <= 1'b0;
         end
       end else if (ADC_READ_MODE == CRC_ENABLED) begin
-        nr_rd_burst = 4'd9;
+        nr_rd_burst = 5'd9;
         if ((transfer_state == CNTRL_LOW) && ~(wr_req_d | rd_req_d)) begin
           read_ch_data <= 1'b1;
         end else if (channel_counter == 4'd9) begin
           read_ch_data <= 1'b0;
         end
+      end else if (ADC_READ_MODE == STATUS_HEADER) begin
+        nr_rd_burst = 5'd16;
+        if ((transfer_state == CNTRL_LOW) && ~(wr_req_d | rd_req_d)) begin
+          read_ch_data <= 1'b1;
+        end else if (channel_counter == 5'd16) begin
+          read_ch_data <= 1'b0;
+        end
       end else begin
         read_ch_data <= 1'b1;
       end
-
-      if (read_ch_data == 1'b1 && rd_new_data_s == 1'b1) begin
-        case (channel_counter)
-          4'd0 : begin
-            adc_data_0 <= rd_data;
-          end
-          4'd1 : begin
-            adc_data_1 <= rd_data;
-          end
-          4'd2 : begin
-            adc_data_2 <= rd_data;
-          end
-          4'd3 : begin
-            adc_data_3 <= rd_data;
-          end
-          4'd4 : begin
-            adc_data_4 <= rd_data;
-          end
-          4'd5 : begin
-            adc_data_5 <= rd_data;
-          end
-          4'd6 : begin
-            adc_data_6 <= rd_data;
-          end
-          4'd7 : begin
-            adc_data_7 <= rd_data;
-          end
-          4'd8 : begin
-            crc_data <= rd_data;
-          end
-        endcase
+      if (ADC_READ_MODE == SIMPLE) begin
+        if (read_ch_data == 1'b1 && rd_new_data_s == 1'b1) begin
+          case (channel_counter)
+            5'd0 : begin
+              adc_data_0 <= rd_data;
+            end
+            5'd1 : begin
+              adc_data_1 <= rd_data;
+            end
+            5'd2 : begin
+              adc_data_2 <= rd_data;
+            end
+            5'd3 : begin
+              adc_data_3 <= rd_data;
+            end
+            5'd4 : begin
+              adc_data_4 <= rd_data;
+            end
+            5'd5 : begin
+              adc_data_5 <= rd_data;
+            end
+            5'd6 : begin
+              adc_data_6 <= rd_data;
+            end
+            5'd7 : begin
+              adc_data_7 <= rd_data;
+            end
+            5'd8 : begin
+              crc_data <= rd_data;
+            end
+          endcase
+        end
+        adc_valid <= (channel_counter == 5'd8) || (wr_req_d | rd_req_d) ? rd_valid_d : 1'b0 ;
+      end else if (ADC_READ_MODE == STATUS_HEADER) begin
+        if (read_ch_data == 1'b1 && rd_new_data_s == 1'b1) begin
+          case (channel_counter)
+            5'd0: begin
+              adc_data_0 <= rd_data;
+            end
+            5'd1: begin
+              adc_status_0 <= rd_data[15:8];
+              if (adc_status_0[2:0] != 3'b000) begin
+                adc_status_er_ch_id[0] <= 1'b1;
+              end
+            end
+            5'd2: begin
+              adc_data_1 <= rd_data;
+            end
+            5'd3: begin
+              adc_status_1 <= rd_data[15:8];
+	      if (adc_status_1[2:0] != 3'b001) begin
+                adc_status_er_ch_id[1] <= 1'b1;
+              end
+            end
+            5'd4: begin
+              adc_data_2 <= rd_data;
+            end
+            5'd5: begin
+              adc_status_2 <= rd_data[15:8];
+	      if (adc_status_2[2:0] != 3'b010) begin
+                adc_status_er_ch_id[2] <= 1'b1;
+              end
+            end
+            5'd6: begin
+              adc_data_3 <= rd_data;
+            end
+            5'd7: begin
+              adc_status_3 <= rd_data[15:8];
+              if (adc_status_3[2:0] != 3'b011) begin
+                adc_status_er_ch_id[3] <= 1'b1;
+              end
+            end
+            5'd8: begin
+              adc_data_4 <= rd_data;
+            end
+            5'd9: begin
+              adc_status_4 <= rd_data[15:8];
+              if (adc_status_4[2:0] != 3'b100) begin
+                adc_status_er_ch_id[4] <= 1'b1;
+              end
+            end
+            5'd10: begin
+              adc_data_5 <= rd_data;
+            end
+            5'd11: begin
+              adc_status_5 <= rd_data[15:8];
+              if (adc_status_5[2:0] != 3'b101) begin
+                adc_status_er_ch_id[5] <= 1'b1;
+              end
+            end
+            5'd12: begin
+              adc_data_6 <= rd_data;
+            end
+            5'd13: begin
+              adc_status_6 <= rd_data[15:8];
+              if (adc_status_6[2:0] != 3'b110) begin
+                adc_status_er_ch_id[6] <= 1'b1;
+              end
+            end
+            5'd14: begin
+              adc_data_7 <= rd_data;
+            end
+            5'd15: begin
+              adc_status_7 <= rd_data[15:8];
+              if (adc_status_7[2:0] != 3'b111) begin
+                adc_status_er_ch_id[7] <= 1'b1;
+              end
+            end
+          endcase
+        end
+        adc_valid <= (channel_counter == 5'd16) || (wr_req_d | rd_req_d) ? rd_valid_d : 1'b0;
       end
-      adc_valid <= (channel_counter == 4'd8) || (wr_req_d | rd_req_d) ? rd_valid_d : 1'b0 ;
     end
   end
 
@@ -277,6 +378,12 @@ module axi_ad7606b_pif #(
     rd_valid <= rd_new_data_s;
     rd_valid_d <= rd_valid_s;
   end
+
+  // Error detection logic using channels' status header
+  
+  assign adc_status_er_5b = adc_status_0[7:3] | adc_status_1[7:3] | adc_status_2[7:3] | adc_status_3[7:3] | adc_status_4[7:3] | adc_status_5[7:3] | adc_status_6[7:3] | adc_status_7[7:3];
+  assign adc_status_er = adc_status_er_5b[0] | adc_status_er_5b[1] | adc_status_er_5b[2] | adc_status_er_5b[3] | adc_status_er_5b[4] | adc_status_er_ch_id[0] | adc_status_er_ch_id[1] | adc_status_er_ch_id[2] | adc_status_er_ch_id[3] | adc_status_er_ch_id[4] | adc_status_er_ch_id[5] | adc_status_er_ch_id[6] | adc_status_er_ch_id[7];
+  assign adc_status = (ADC_READ_MODE == STATUS_HEADER) ? (adc_status_er ? 1'b0 : 1'b1) : 1'b1;
 
   assign cs_n = (transfer_state == IDLE) ? 1'b1 : 1'b0;
   assign db_t = ~wr_req_d;

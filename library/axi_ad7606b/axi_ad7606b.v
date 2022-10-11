@@ -1,6 +1,6 @@
 // ***************************************************************************
 // ***************************************************************************
-// Copyright 2022 (c) Analog Devices, Inc. All rights reserved.
+// Copyright 2014 - 2022 (c) Analog Devices, Inc. All rights reserved.
 //
 // In this HDL repository, there are many different and unique modules, consisting
 // of various HDL (Verilog or VHDL) components. The individual modules are
@@ -38,6 +38,7 @@
 module axi_ad7606b #(
 
   parameter       ID = 0,
+  parameter       IF_TYPE = 1,
   parameter       ADC_READ_MODE = 1,
   parameter       EXTERNAL_CLK = 0
 ) (
@@ -94,6 +95,7 @@ module axi_ad7606b #(
   output      [15:0]      adc_data_5,
   output      [15:0]      adc_data_6,
   output      [15:0]      adc_data_7,
+
   output                  adc_enable_0,
   output                  adc_enable_1,
   output                  adc_enable_2,
@@ -105,8 +107,6 @@ module axi_ad7606b #(
   output                  adc_reset
 );
 
-  localparam                        RD_RAW_CAP = 32'h2000;
-
   // internal registers
 
   reg                               up_wack = 1'b0;
@@ -117,6 +117,9 @@ module axi_ad7606b #(
   reg                               up_wack_r;
 
   // internal signals
+
+  wire    [ 7:0]                    adc_status_header[0:7];
+  wire                              adc_status;
 
   wire    [ 7:0]                    adc_enable;
   wire                              adc_reset_s;
@@ -132,6 +135,9 @@ module axi_ad7606b #(
   wire    [8:0]                     up_rack_s;
   wire    [8:0]                     up_wack_s;
 
+  wire                              up_wack_if_s;
+  wire                              up_rack_if_s;
+  wire    [31:0]                    up_rdata_if_s;
   wire                              up_wack_cntrl_s;
   wire                              up_rack_cntrl_s;
   wire    [31:0]                    up_rdata_cntrl_s;
@@ -147,6 +153,9 @@ module axi_ad7606b #(
   wire                              m_axis_valid_s;
   wire    [15:0]                    m_axis_data_s;
   wire                              m_axis_xfer_req_s;
+
+  wire                              resetn_s;
+  wire                              cnvst_en_s;
 
   // defaults
 
@@ -200,6 +209,10 @@ module axi_ad7606b #(
 
   assign adc_clk = adc_clk_s;
 
+  assign up_wack_if_s = 1'h0;
+  assign up_rack_if_s = 1'h0;
+  assign up_rdata_if_s = 1'h0;
+
   generate
     genvar i;
     for (i = 0; i < 8; i = i + 1) begin
@@ -224,7 +237,7 @@ module axi_ad7606b #(
         .adc_pn_oos (1'b0),
         .adc_or (1'b0),
         .adc_read_data (rd_data_s),
-        .adc_status_header(),
+        .adc_status_header(adc_status_header[i]),
         .adc_crc_err(),
         .up_adc_pn_err (),
         .up_adc_pn_oos (),
@@ -268,13 +281,22 @@ module axi_ad7606b #(
     .busy (rx_busy),
     .first_data (first_data),
     .adc_data_0 (adc_data_0),
+    .adc_status_0 (adc_status_header[0]),
     .adc_data_1 (adc_data_1),
+    .adc_status_1 (adc_status_header[1]),
     .adc_data_2 (adc_data_2),
+    .adc_status_2 (adc_status_header[2]),
     .adc_data_3 (adc_data_3),
+    .adc_status_3 (adc_status_header[3]),
     .adc_data_4 (adc_data_4),
+    .adc_status_4 (adc_status_header[4]),
     .adc_data_5 (adc_data_5),
+    .adc_status_5 (adc_status_header[5]),
     .adc_data_6 (adc_data_6),
+    .adc_status_6 (adc_status_header[6]),
     .adc_data_7 (adc_data_7),
+    .adc_status_7 (adc_status_header[7]),
+    .adc_status (adc_status),
     .adc_valid (adc_valid),
     .clk (adc_clk_s),
     .rstn (up_rstn),
@@ -286,7 +308,7 @@ module axi_ad7606b #(
 
   up_adc_common #(
     .ID (ID),
-    .CONFIG (RD_RAW_CAP)
+    .CONFIG (32'h2000)
   ) i_up_adc_common (
     .mmcm_rst (),
     .adc_clk (adc_clk_s),
@@ -294,7 +316,7 @@ module axi_ad7606b #(
     .adc_r1_mode (),
     .adc_ddr_edgesel (),
     .adc_pin_mode (),
-    .adc_status ('h00),
+    .adc_status (adc_status),
     .adc_sync_status (1'b1),
     .adc_status_ovf (adc_dovf),
     .adc_clk_ratio (),
