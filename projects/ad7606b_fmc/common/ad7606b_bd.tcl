@@ -1,3 +1,9 @@
+# system level parameters
+
+set SIMPLE_STATUS $ad_project_params(SIMPLE_STATUS)
+
+puts "build parameters: SIMPLE_STATUS: $SIMPLE_STATUS"
+
 # data, read and write lines
 
 create_bd_port -dir O -from 15 -to 0 rx_db_o
@@ -16,6 +22,8 @@ create_bd_port -dir I rx_first_data
 # instantiation
 
 ad_ip_instance axi_ad7606b axi_ad7606b
+ad_ip_parameter axi_ad7606b CONFIG.IF_TYPE 1
+ad_ip_parameter axi_ad7606b CONFIG.ADC_READ_MODE $SIMPLE_STATUS
 ad_ip_parameter axi_ad7606b CONFIG.EXTERNAL_CLK 0
 
 ad_ip_instance axi_pwm_gen axi_pwm_gen
@@ -50,11 +58,11 @@ ad_connect  rx_busy axi_ad7606b/rx_busy
 ad_connect  rx_first_data axi_ad7606b/first_data
 
 ad_connect  sys_cpu_clk axi_ad7606b_dma/s_axi_aclk
+ad_connect  sys_cpu_clk axi_ad7606b_dma/fifo_wr_clk
 ad_connect  sys_cpu_clk axi_pwm_gen/s_axi_aclk
 ad_connect  sys_cpu_resetn axi_pwm_gen/s_axi_aresetn
 
 ad_connect  axi_ad7606b/adc_clk ad7606b_adc_pack/clk
-ad_connect  axi_ad7606b/adc_clk axi_ad7606b_dma/fifo_wr_clk
 ad_connect  axi_ad7606b/adc_reset ad7606b_adc_pack/reset
 ad_connect  axi_ad7606b/adc_valid ad7606b_adc_pack/fifo_wr_en
 ad_connect  ad7606b_adc_pack/packed_fifo_wr axi_ad7606b_dma/fifo_wr
