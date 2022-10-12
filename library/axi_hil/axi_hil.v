@@ -32,7 +32,7 @@
 //
 // ***************************************************************************
 // ***************************************************************************
-`timescale 1ns / 1ps
+`timescale 1ns/100ps
 
 module axi_hil #(
   parameter     ID = 0
@@ -48,6 +48,18 @@ module axi_hil #(
   input                               adc_2_valid,
   input       [15:0]                  adc_3_data,
   input                               adc_3_valid,
+
+  // ila probes
+  // output      [15:0]                  dbg_adc_0_threshold,
+  // output      [15:0]                  dbg_dac_0_min_value,
+  // output      [15:0]                  dbg_dac_0_max_value,
+  // output      [31:0]                  dbg_adc_0_delay_prescaler,
+  // output      [31:0]                  dbg_adc_0_delay_cnt,
+  // output      [ 0:0]                  dbg_dac_0_bypass_mux,
+  // output      [ 0:0]                  dbg_resetn,
+  // output      [ 0:0]                  dbg_adc_0_threshold_passed,
+  // output      [ 0:0]                  dbg_adc_0_delay_cnt_en,
+
 
   //axi interface
   input                               s_axi_aclk,
@@ -79,113 +91,41 @@ module axi_hil #(
                                                 8'h00};      /* PATCH */ // 0.0.0
   localparam [31:0] CORE_MAGIC              = 32'h48494C43;    // HILC
 
-  wire up_clk;
-  wire up_rstn;
-
-  assign up_clk = s_axi_aclk;
-  assign up_rstn = s_axi_aresetn;
-
-  reg           up_wack = 'd0;
-  reg   [31:0]  up_rdata = 'd0;
-  reg           up_rack = 'd0;
-  reg           up_resetn = 1'b0;
-  reg   [31:0]  up_scratch = 'd0;
-
+  wire          up_wack;
+  wire   [31:0] up_rdata;
+  wire          up_rack;
   wire          up_rreq_s;
   wire  [7:0]   up_raddr_s;
   wire          up_wreq_s;
   wire  [7:0]   up_waddr_s;
   wire  [31:0]  up_wdata_s;
 
-  reg   [15:0]  dac_0_data;
-  reg   [15:0]  dac_1_data;
-  reg   [15:0]  dac_2_data;
-  reg   [15:0]  dac_3_data;
+  wire          up_clk = s_axi_aclk;
+  wire          up_rstn = s_axi_aresetn;
 
-  // reg   [15:0]  axi_adc_0_threshold;
-  // reg   [31:0]  axi_adc_0_delay_prescaler;
-  // reg   [31:0]  axi_adc_0_delay_cnt;
-  // reg           axi_adc_0_delay_cnt_en;
-  // reg   [15:0]  axi_dac_0_min_value;
-  // reg   [15:0]  axi_dac_0_max_value;
-
-  // reg   [15:0]  axi_adc_1_threshold;
-  // reg   [31:0]  axi_adc_1_delay_prescaler;
-  // reg   [31:0]  axi_adc_1_delay_cnt;
-  // reg           axi_adc_1_delay_cnt_en;
-  // reg   [15:0]  axi_dac_1_min_value;
-  // reg   [15:0]  axi_dac_1_max_value;
-
-  // reg   [15:0]  axi_adc_2_threshold;
-  // reg   [31:0]  axi_adc_2_delay_prescaler;
-  // reg   [31:0]  axi_adc_2_delay_cnt;
-  // reg           axi_adc_2_delay_cnt_en;
-  // reg   [15:0]  axi_dac_2_min_value; 
-  // reg   [15:0]  axi_dac_2_max_value;
-
-  // reg   [15:0]  axi_adc_3_threshold;
-  // reg   [31:0]  axi_adc_3_delay_prescaler;
-  // reg   [31:0]  axi_adc_3_delay_cnt;
-  // reg           axi_adc_3_delay_cnt_en;
-  // reg   [15:0]  axi_dac_3_min_value;
-  // reg   [15:0]  axi_dac_3_max_value;
-
-  wire           resetn;
-
-  wire   [15:0]  adc_0_threshold;
-  wire   [31:0]  adc_0_delay_prescaler;
-  reg    [31:0]  adc_0_delay_cnt;
-  reg            adc_0_delay_cnt_en;
-  wire   [15:0]  dac_0_min_value;
-  wire   [15:0]  dac_0_max_value;
-
-  wire   [15:0]  adc_1_threshold;
-  wire   [31:0]  adc_1_delay_prescaler;
-  reg    [31:0]  adc_1_delay_cnt;
-  reg            adc_1_delay_cnt_en;
-  wire   [15:0]  dac_1_min_value;
-  wire   [15:0]  dac_1_max_value;
-
-  wire   [15:0]  adc_2_threshold;
-  wire   [31:0]  adc_2_delay_prescaler;
-  reg    [31:0]  adc_2_delay_cnt;
-  reg            adc_2_delay_cnt_en;
-  wire   [15:0]  dac_2_min_value; 
-  wire   [15:0]  dac_2_max_value;
-
-  wire   [15:0]  adc_3_threshold;
-  wire   [31:0]  adc_3_delay_prescaler;
-  reg    [31:0]  adc_3_delay_cnt;
-  reg            adc_3_delay_cnt_en;
-  wire   [15:0]  dac_3_min_value;
-  wire   [15:0]  dac_3_max_value;
-
-  reg   [15:0]  delay_dac_0_data;
-  reg   [15:0]  delay_dac_1_data;
-  reg   [15:0]  delay_dac_2_data;
-  reg   [15:0]  delay_dac_3_data;
-
-  reg           adc_0_input_change;
-  reg           prev_adc_0_input_change;
-
-  reg           adc_1_input_change;
-  reg           prev_adc_1_input_change;
-
-  reg           adc_2_input_change;
-  reg           prev_adc_2_input_change;
-
-  reg           adc_3_input_change;
-  reg           prev_adc_3_input_change;
+  wire            resetn;
+  wire            adc_threshold_passed  [3:0];
+  wire   [15:0]   dac_data              [3:0];
+  wire            dac_bypass_mux        [3:0];
+  wire   [15:0]   adc_threshold         [3:0];
+  wire   [31:0]   adc_delay_prescaler   [3:0];
+  wire   [15:0]   dac_min_value         [3:0];
+  wire   [15:0]   dac_max_value         [3:0];
+  wire   [31:0]   dac_pulse_prescaler   [3:0];
+  reg    [31:0]   adc_delay_cnt         [3:0];
+  reg             adc_delay_cnt_en      [3:0];
+  reg    [31:0]   dac_pulse_cnt         [3:0];
+  reg             dac_pulse_cnt_en      [3:0];
+  reg    [15:0]   delay_dac_data        [3:0];
+  reg             adc_input_change      [3:0];
+  reg             adc_input_change_d1   [3:0];
+  reg             adc_input_change_d2   [3:0];
   
-  wire          adc_0_threshold_passed;
-  wire          adc_1_threshold_passed;
-  wire          adc_2_threshold_passed;
-  wire          adc_3_threshold_passed;
 
   up_axi #(
     .AXI_ADDRESS_WIDTH (10)
   ) i_up_axi (
-    .up_rstn (up_resetn),
+    .up_rstn (up_rstn),
     .up_clk (up_clk),
     .up_axi_awvalid (s_axi_awvalid),
     .up_axi_awaddr (s_axi_awaddr),
@@ -217,42 +157,54 @@ module axi_hil #(
     .ID (ID),
     .CORE_MAGIC (CORE_MAGIC),
     .CORE_VERSION (CORE_VERSION),
-    .ADC_0_THRESHOLD (0),
+    .ADC_0_THRESHOLD (16'h2000),
     .ADC_1_THRESHOLD (0),
     .ADC_2_THRESHOLD (0),
     .ADC_3_THRESHOLD (0),
-    .ADC_0_DELAY_PRESCALER (0),
+    .ADC_0_DELAY_PRESCALER (32'h00B71B00),
     .ADC_1_DELAY_PRESCALER (0),
     .ADC_2_DELAY_PRESCALER (0),
     .ADC_3_DELAY_PRESCALER (0),
-    .DAC_0_MIN_VALUE (0),
+    .DAC_0_MIN_VALUE (16'h4639),
     .DAC_1_MIN_VALUE (0),
     .DAC_2_MIN_VALUE (0),
     .DAC_3_MIN_VALUE (0),
-    .DAC_0_MAX_VALUE (0),
+    .DAC_0_MAX_VALUE (16'h0000),
     .DAC_1_MAX_VALUE (0),
     .DAC_2_MAX_VALUE (0),
-    .DAC_3_MAX_VALUE (0)
+    .DAC_3_MAX_VALUE (0),
+    .DAC_0_PULSE_PRESCALER (32'h00B71B00),
+    .DAC_1_PULSE_PRESCALER (0),
+    .DAC_2_PULSE_PRESCALER (0),
+    .DAC_3_PULSE_PRESCALER (0)
   ) i_regmap (
     .ext_clk (sampling_clk),
     .resetn (resetn),
-    .adc_0_threshold (adc_0_threshold),
-    .adc_1_threshold (adc_1_threshold),
-    .adc_2_threshold (adc_2_threshold),
-    .adc_3_threshold (adc_3_threshold),
-    .adc_0_delay_prescaler (adc_0_delay_prescaler),
-    .adc_1_delay_prescaler (adc_1_delay_prescaler),
-    .adc_2_delay_prescaler (adc_2_delay_prescaler),
-    .adc_3_delay_prescaler (adc_3_delay_prescaler),
-    .dac_0_min_value (dac_0_min_value),
-    .dac_1_min_value (dac_1_min_value),
-    .dac_2_min_value (dac_2_min_value),
-    .dac_3_min_value (dac_3_min_value),
-    .dac_0_max_value (dac_0_max_value),
-    .dac_1_max_value (dac_1_max_value),
-    .dac_2_max_value (dac_2_max_value),
-    .dac_3_max_value (dac_3_max_value),
-    .up_rstn (up_resetn),
+    .dac_0_bypass_mux (dac_bypass_mux[0]),
+    .dac_1_bypass_mux (dac_bypass_mux[1]),
+    .dac_2_bypass_mux (dac_bypass_mux[2]),
+    .dac_3_bypass_mux (dac_bypass_mux[3]),
+    .adc_0_threshold (adc_threshold[0]),
+    .adc_1_threshold (adc_threshold[1]),
+    .adc_2_threshold (adc_threshold[2]),
+    .adc_3_threshold (adc_threshold[3]),
+    .adc_0_delay_prescaler (adc_delay_prescaler[0]),
+    .adc_1_delay_prescaler (adc_delay_prescaler[1]),
+    .adc_2_delay_prescaler (adc_delay_prescaler[2]),
+    .adc_3_delay_prescaler (adc_delay_prescaler[3]),
+    .dac_0_min_value (dac_min_value[0]),
+    .dac_1_min_value (dac_min_value[1]),
+    .dac_2_min_value (dac_min_value[2]),
+    .dac_3_min_value (dac_min_value[3]),
+    .dac_0_max_value (dac_max_value[0]),
+    .dac_1_max_value (dac_max_value[1]),
+    .dac_2_max_value (dac_max_value[2]),
+    .dac_3_max_value (dac_max_value[3]),
+    .dac_0_pulse_prescaler (dac_pulse_prescaler[0]),
+    .dac_1_pulse_prescaler (dac_pulse_prescaler[1]),
+    .dac_2_pulse_prescaler (dac_pulse_prescaler[2]),
+    .dac_3_pulse_prescaler (dac_pulse_prescaler[3]),
+    .up_rstn (up_rstn),
     .up_clk (up_clk),
     .up_wreq (up_wreq_s),
     .up_waddr (up_waddr_s),
@@ -263,414 +215,98 @@ module axi_hil #(
     .up_rdata (up_rdata),
     .up_rack (up_rack));
 
-  // //axi registers write
-  // always @(posedge s_axi_aclk) begin
-  //   if (up_resetn == 1'b0) begin
-  //       up_scratch <= 'd0;
-  //   end else begin
-  //     if (up_wreq_s == 1'b1) begin
-  //       case (up_waddr_s)
-  //         8'h02: up_scratch <= up_wdata_s;
-          
-  //         8'h30: axi_adc_0_threshold <= up_wdata_s[15:0];
-  //         8'h31: axi_adc_1_threshold <= up_wdata_s[15:0];
-  //         8'h32: axi_adc_2_threshold <= up_wdata_s[15:0];
-  //         8'h33: axi_adc_3_threshold <= up_wdata_s[15:0];
-          
-  //         8'h40: axi_dac_0_min_value <= up_wdata_s[15:0];
-  //         8'h41: axi_dac_1_min_value <= up_wdata_s[15:0];
-  //         8'h42: axi_dac_2_min_value <= up_wdata_s[15:0];
-  //         8'h43: axi_dac_3_min_value <= up_wdata_s[15:0];
-
-  //         8'h50: axi_dac_0_max_value <= up_wdata_s[15:0];
-  //         8'h51: axi_dac_1_max_value <= up_wdata_s[15:0];
-  //         8'h52: axi_dac_2_max_value <= up_wdata_s[15:0];
-  //         8'h53: axi_dac_3_max_value <= up_wdata_s[15:0];
-
-  //         8'h60: axi_adc_0_delay_prescaler <= up_wdata_s;
-  //         8'h61: axi_adc_1_delay_prescaler <= up_wdata_s;
-  //         8'h62: axi_adc_2_delay_prescaler <= up_wdata_s;
-  //         8'h63: axi_adc_3_delay_prescaler <= up_wdata_s;
-
-  //         default:; // nothing
-  //       endcase
-  //     end
-  //   end
-  // end
-
-  // sync_data #(
-  //   .NUM_OF_BITS (16)
-  // ) sync_adc_0_threshold (
-  //   .in_clk(s_axi_aclk),
-  //   .in_data(axi_adc_0_threshold),
-  //   .out_clk(sampling_clk),
-  //   .out_data(adc_0_threshold)
-  // );
-
-  // sync_data #(
-  //   .NUM_OF_BITS (16)
-  // ) sync_adc_1_threshold (
-  //   .in_clk(s_axi_aclk),
-  //   .in_data(axi_adc_1_threshold),
-  //   .out_clk(sampling_clk),
-  //   .out_data(adc_1_threshold)
-  // );
-
-  // sync_data #(
-  //   .NUM_OF_BITS (16)
-  // ) sync_adc_2_threshold (
-  //   .in_clk(s_axi_aclk),
-  //   .in_data(axi_adc_2_threshold),
-  //   .out_clk(sampling_clk),
-  //   .out_data(adc_2_threshold)
-  // );
-
-  // sync_data #(
-  //   .NUM_OF_BITS (16)
-  // ) sync_adc_3_threshold (
-  //   .in_clk(s_axi_aclk),
-  //   .in_data(axi_adc_3_threshold),
-  //   .out_clk(sampling_clk),
-  //   .out_data(adc_3_threshold)
-  // );
-
-  // sync_data #(
-  //   .NUM_OF_BITS (16)
-  // ) sync_dac_0_min_value (
-  //   .in_clk(s_axi_aclk),
-  //   .in_data(axi_dac_0_min_value),
-  //   .out_clk(sampling_clk),
-  //   .out_data(dac_0_min_value)
-  // );
-
-  // sync_data #(
-  //   .NUM_OF_BITS (16)
-  // ) sync_dac_1_min_value (
-  //   .in_clk(s_axi_aclk),
-  //   .in_data(axi_dac_1_min_value),
-  //   .out_clk(sampling_clk),
-  //   .out_data(dac_1_min_value)
-  // );
-
-  // sync_data #(
-  //   .NUM_OF_BITS (16)
-  // ) sync_dac_2_min_value (
-  //   .in_clk(s_axi_aclk),
-  //   .in_data(axi_dac_2_min_value),
-  //   .out_clk(sampling_clk),
-  //   .out_data(dac_2_min_value)
-  // );
-
-  // sync_data #(
-  //   .NUM_OF_BITS (16)
-  // ) sync_dac_3_min_value (
-  //   .in_clk(s_axi_aclk),
-  //   .in_data(axi_dac_3_min_value),
-  //   .out_clk(sampling_clk),
-  //   .out_data(dac_3_min_value)
-  // );
-
-  // sync_data #(
-  //   .NUM_OF_BITS (16)
-  // ) sync_dac_0_max_value (
-  //   .in_clk(s_axi_aclk),
-  //   .in_data(axi_dac_0_max_value),
-  //   .out_clk(sampling_clk),
-  //   .out_data(dac_0_max_value)
-  // );
-
-  // sync_data #(
-  //   .NUM_OF_BITS (16)
-  // ) sync_dac_1_max_value (
-  //   .in_clk(s_axi_aclk),
-  //   .in_data(axi_dac_1_max_value),
-  //   .out_clk(sampling_clk),
-  //   .out_data(dac_1_max_value)
-  // );
-
-  // sync_data #(
-  //   .NUM_OF_BITS (16)
-  // ) sync_dac_2_max_value (
-  //   .in_clk(s_axi_aclk),
-  //   .in_data(axi_dac_2_max_value),
-  //   .out_clk(sampling_clk),
-  //   .out_data(dac_2_max_value)
-  // );
-
-  // sync_data #(
-  //   .NUM_OF_BITS (16)
-  // ) sync_dac_3_max_value (
-  //   .in_clk(s_axi_aclk),
-  //   .in_data(axi_dac_3_max_value),
-  //   .out_clk(sampling_clk),
-  //   .out_data(dac_3_max_value)
-  // );
-
-  // sync_data #(
-  //   .NUM_OF_BITS (32)
-  // ) sync_adc_0_delay_prescaler (
-  //   .in_clk(s_axi_aclk),
-  //   .in_data(axi_adc_0_delay_prescaler),
-  //   .out_clk(sampling_clk),
-  //   .out_data(adc_0_delay_prescaler)
-  // );
-
-  // sync_data #(
-  //   .NUM_OF_BITS (32)
-  // ) sync_adc_1_delay_prescaler (
-  //   .in_clk(s_axi_aclk),
-  //   .in_data(axi_adc_1_delay_prescaler),
-  //   .out_clk(sampling_clk),
-  //   .out_data(adc_1_delay_prescaler)
-  // );
-
-  // sync_data #(
-  //   .NUM_OF_BITS (32)
-  // ) sync_adc_2_delay_prescaler (
-  //   .in_clk(s_axi_aclk),
-  //   .in_data(axi_adc_2_delay_prescaler),
-  //   .out_clk(sampling_clk),
-  //   .out_data(adc_2_delay_prescaler)
-  // );
-
-  // sync_data #(
-  //   .NUM_OF_BITS (32)
-  // ) sync_adc_3_delay_prescaler (
-  //   .in_clk(s_axi_aclk),
-  //   .in_data(axi_adc_3_delay_prescaler),
-  //   .out_clk(sampling_clk),
-  //   .out_data(adc_3_delay_prescaler)
-  // );
-
-  // ad_rst i_d_rst_reg (
-  //     .rst_async (up_resetn),
-  //     .clk (sampling_clk),
-  //     .rstn (rstn),
-  //     .rst ());
-
-  // //writing reset
-  // always @(posedge s_axi_aclk) begin
-  //   if (s_axi_aresetn == 1'b0) begin
-  //     up_wack <= 'd0;
-  //     up_resetn <= 1'd0;
-  //   end else begin
-  //     up_wack <= up_wreq_s;
-  //     if ((up_wreq_s == 1'b1) && (up_waddr_s == 8'h20)) begin
-  //       up_resetn <= up_wdata_s[0];
-  //     end else begin
-  //       up_resetn <= 1'd1;
-  //     end
-  //   end
-  // end
-
-  // //axi registers read
-  // always @(posedge s_axi_aclk) begin
-  //   if (s_axi_aresetn == 1'b0) begin
-  //     up_rack <= 'd0;
-  //     up_rdata <= 'd0;
-  //   end else begin
-  //     up_rack <= up_rreq_s;
-  //     if (up_rreq_s == 1'b1) begin
-  //       case (up_raddr_s)
-  //         8'h00: up_rdata <= CORE_VERSION;
-  //         8'h01: up_rdata <= ID;
-  //         8'h02: up_rdata <= up_scratch;
-  //         8'h03: up_rdata <= CORE_MAGIC;
-  //         8'h20: up_rdata <= up_resetn;
-
-  //         8'h30: up_rdata <= axi_adc_0_threshold;
-  //         8'h31: up_rdata <= axi_adc_1_threshold;
-  //         8'h32: up_rdata <= axi_adc_2_threshold;
-  //         8'h33: up_rdata <= axi_adc_3_threshold; 
-
-  //         8'h40: up_rdata <= axi_dac_0_min_value;
-  //         8'h41: up_rdata <= axi_dac_1_min_value;
-  //         8'h42: up_rdata <= axi_dac_2_min_value;
-  //         8'h43: up_rdata <= axi_dac_3_min_value;
-
-  //         8'h50: up_rdata <= axi_dac_0_max_value;
-  //         8'h51: up_rdata <= axi_dac_1_max_value;
-  //         8'h52: up_rdata <= axi_dac_2_max_value;
-  //         8'h53: up_rdata <= axi_dac_3_max_value;
-
-  //         8'h60: up_rdata <= axi_adc_0_delay_prescaler;
-  //         8'h61: up_rdata <= axi_adc_1_delay_prescaler;
-  //         8'h62: up_rdata <= axi_adc_2_delay_prescaler;
-  //         8'h63: up_rdata <= axi_adc_3_delay_prescaler;
-
-  //         default: up_rdata <= 0;
-  //       endcase
-  //     end else begin
-  //       up_rdata <= 32'd0;
-  //     end
-  //   end
-  // end
-
-  assign adc_0_threshold_passed = !prev_adc_0_input_change && adc_0_input_change;
-  assign adc_1_threshold_passed = !prev_adc_1_input_change && adc_1_input_change;
-  assign adc_2_threshold_passed = !prev_adc_2_input_change && adc_2_input_change;
-  assign adc_3_threshold_passed = !prev_adc_3_input_change && adc_3_input_change;
-
-  // starts/stops the delay prescaler
-  always @(posedge sampling_clk) begin
-    if (resetn == 1'b0) begin
-      adc_0_delay_cnt_en <= 1'b0;
-      adc_1_delay_cnt_en <= 1'b0;
-      adc_2_delay_cnt_en <= 1'b0;
-      adc_3_delay_cnt_en <= 1'b0;
+     //comparator logic
+  always @(*) begin
+    if (adc_0_valid && !adc_0_data[15] && adc_0_data >= adc_threshold[0]) begin
+      adc_input_change[0] <= 1'b1;
     end else begin
-      if (!adc_0_delay_cnt_en && adc_0_threshold_passed) begin
-        adc_0_delay_cnt_en <= 1'b1;
-      end
-      if (!adc_1_delay_cnt_en && adc_1_threshold_passed) begin
-        adc_1_delay_cnt_en <= 1'b1;
-      end
-      if (!adc_2_delay_cnt_en && adc_2_threshold_passed) begin
-        adc_2_delay_cnt_en <= 1'b1;
-      end
-      if (!adc_3_delay_cnt_en && adc_3_threshold_passed) begin
-        adc_3_delay_cnt_en <= 1'b1;
-      end
-
-      if (adc_0_delay_cnt == adc_0_delay_prescaler) begin
-        adc_0_delay_cnt_en <= 1'b0;
-      end
-      if (adc_1_delay_cnt == adc_1_delay_prescaler) begin
-        adc_1_delay_cnt_en <= 1'b0;
-      end
-      if (adc_2_delay_cnt == adc_2_delay_prescaler) begin
-        adc_2_delay_cnt_en <= 1'b0;
-      end
-      if (adc_3_delay_cnt == adc_3_delay_prescaler) begin
-        adc_3_delay_cnt_en <= 1'b0;
-      end
+      adc_input_change[0] <= 1'b0;
+    end
+    if (adc_1_valid && !adc_1_data[15] && adc_1_data >= adc_threshold[1]) begin
+      adc_input_change[1] <= 1'b1;
+    end else begin
+      adc_input_change[1] <= 1'b0;
+    end
+    if (adc_2_valid && !adc_2_data[15] && adc_2_data >= adc_threshold[2]) begin
+      adc_input_change[2] <= 1'b1;
+    end else begin
+      adc_input_change[2] <= 1'b0;
+    end
+    if (adc_3_valid && !adc_3_data[15] && adc_3_data >= adc_threshold[3]) begin
+      adc_input_change[3] <= 1'b1;
+    end else begin
+      adc_input_change[3] <= 1'b0;
     end
   end
 
-  //sets the delay before generating the result on the DAC
-  always @(posedge sampling_clk) begin
-    if (resetn == 1'b0) begin
-        adc_0_delay_cnt <= 32'h0;
-        adc_1_delay_cnt <= 32'h0;
-        adc_2_delay_cnt <= 32'h0;
-        adc_3_delay_cnt <= 32'h0;
-    end else begin
-      if (adc_0_delay_cnt_en) begin
-        if (adc_0_delay_cnt == adc_0_delay_prescaler) begin
-          adc_0_delay_cnt <= 32'h0;
+  genvar i;
+  generate
+    for (i=0; i < 4; i=i+1) begin
+      assign adc_threshold_passed[i] = !adc_input_change_d2[i] && adc_input_change_d1[i];
+      
+      always @(posedge sampling_clk) begin
+        if (resetn == 1'b0) begin
+          adc_input_change_d2[i] <= 1'b0;
+          adc_input_change_d1[i] <= 1'b0;
+          adc_delay_cnt_en[i] <= 1'b0;
+          dac_pulse_cnt_en[i] <= 1'b0;
         end else begin
-          adc_0_delay_cnt <= adc_0_delay_cnt + 1'b1;
+          adc_input_change_d1[i] <= adc_input_change[i];
+          adc_input_change_d2[i] <= adc_input_change_d1[i];
+          if (!adc_delay_cnt_en[i] && adc_threshold_passed[i]) begin
+            adc_delay_cnt_en[i] <= 1'b1;
+          end
+          if (adc_delay_cnt[i] == adc_delay_prescaler[i]) begin
+            adc_delay_cnt_en[i] <= 1'b0;
+            dac_pulse_cnt_en[i] <= 1'b1;
+          end
+          if (dac_pulse_cnt[i] == dac_pulse_prescaler[i]) begin
+            dac_pulse_cnt_en[i] <= 1'b0;
+          end
         end
       end
-      if (adc_1_delay_cnt_en) begin
-        if (adc_1_delay_cnt == adc_1_delay_prescaler) begin
-          adc_1_delay_cnt <= 32'h0;
+
+      always @(posedge sampling_clk) begin
+        if (resetn == 1'b0) begin
+          adc_delay_cnt[i] <= 32'd0;
+          dac_pulse_cnt[i] <= 32'd0;
         end else begin
-          adc_1_delay_cnt <= adc_1_delay_cnt + 1'b1;
-        end
-      end
-      if (adc_2_delay_cnt_en) begin
-        if (adc_2_delay_cnt == adc_2_delay_prescaler) begin
-          adc_2_delay_cnt <= 32'h0;
-        end else begin
-          adc_2_delay_cnt <= adc_2_delay_cnt + 1'b1;
-        end
-      end
-      if (adc_3_delay_cnt_en) begin
-        if (adc_3_delay_cnt == adc_3_delay_prescaler) begin
-          adc_3_delay_cnt <= 32'h0;
-        end else begin
-          adc_3_delay_cnt <= adc_3_delay_cnt + 1'b1;
+          if (adc_delay_cnt_en[i]) begin
+            adc_delay_cnt[i] <= adc_delay_cnt[i] + 1'b1;
+            if (adc_delay_cnt[i] == adc_delay_prescaler[i]) begin
+              adc_delay_cnt[i] <= 32'd0;
+              delay_dac_data[i] <= dac_max_value[i];
+            end
+          end
+          if (dac_pulse_cnt_en[i]) begin
+            dac_pulse_cnt[i] <= dac_pulse_cnt[i] + 1'b1;
+            if (dac_pulse_cnt[i] == dac_pulse_prescaler[i]) begin
+              dac_pulse_cnt[i] <= 32'd0;
+              delay_dac_data[i] <= dac_min_value[i];
+            end
+          end
         end
       end
     end
-  end
+  endgenerate
 
-  //comparator logic
-  always @(posedge sampling_clk) begin
-    if (resetn == 1'b0) begin
-      adc_0_input_change <= 1'b0;
-      adc_1_input_change <= 1'b0;
-      adc_2_input_change <= 1'b0;
-      adc_3_input_change <= 1'b0;
-      prev_adc_0_input_change <= 1'b0;
-      prev_adc_1_input_change <= 1'b0;
-      prev_adc_2_input_change <= 1'b0;
-      prev_adc_3_input_change <= 1'b0;
-    end else begin
-      if (adc_0_valid) begin
-        if (adc_0_data < adc_0_threshold) begin
-          adc_0_input_change <= 1'b0;
-          delay_dac_0_data <= dac_0_min_value;
-        end else begin
-          adc_0_input_change <= 1'b1;
-          delay_dac_0_data <= dac_0_max_value;
-        end
-      end
-      if (adc_1_valid) begin
-        if (adc_1_data < adc_0_threshold) begin
-          adc_1_input_change <= 1'b0;
-          delay_dac_1_data <= dac_1_min_value;
-        end else begin
-          adc_1_input_change <= 1'b1;
-          delay_dac_1_data <= dac_1_max_value;
-        end
-      end
-      if (adc_2_valid) begin
-        if (adc_2_data < adc_2_threshold) begin
-          adc_2_input_change <= 1'b0;
-          delay_dac_2_data <= dac_2_min_value;
-        end else begin
-          adc_2_input_change <= 1'b1;
-          delay_dac_2_data <= dac_2_max_value;
-        end
-      end
-      if (adc_3_valid) begin
-        if (adc_3_data < adc_3_threshold) begin
-          adc_3_input_change <= 1'b0;
-          delay_dac_3_data <= dac_3_min_value;
-        end else begin
-          adc_3_input_change <= 1'b1;
-          delay_dac_3_data <= dac_3_max_value;
-        end
-      end
-    end
-  end
+  assign dac_data[0] = (dac_bypass_mux[0])? {~adc_0_data[15], adc_0_data[14:0]} : {~delay_dac_data[0][15], delay_dac_data[0][14:0]};
+  assign dac_data[1] = (dac_bypass_mux[1])? {~adc_1_data[15], adc_1_data[14:0]} : {~delay_dac_data[1][15], delay_dac_data[1][14:0]};
+  assign dac_data[2] = (dac_bypass_mux[2])? {~adc_2_data[15], adc_2_data[14:0]} : {~delay_dac_data[2][15], delay_dac_data[2][14:0]};
+  assign dac_data[3] = (dac_bypass_mux[3])? {~adc_3_data[15], adc_3_data[14:0]} : {~delay_dac_data[3][15], delay_dac_data[3][14:0]};
 
-  wire change_dac_0_data;
-  wire change_dac_1_data;
-  wire change_dac_2_data;
-  wire change_dac_3_data;
+  assign dac_1_0_data = {dac_data[1], dac_data[0]};
+  assign dac_3_2_data = {dac_data[3], dac_data[2]};
 
-  assign change_dac_0_data = (adc_0_delay_cnt == adc_0_delay_prescaler);
-  assign change_dac_1_data = (adc_1_delay_cnt == adc_1_delay_prescaler);
-  assign change_dac_2_data = (adc_2_delay_cnt == adc_2_delay_prescaler);
-  assign change_dac_3_data = (adc_3_delay_cnt == adc_3_delay_prescaler);
-
-  //assign outputs to DAC after the delay has passed
-  always @(posedge sampling_clk) begin
-    if (resetn == 1'b0) begin
-      dac_0_data <= 'h0;
-      dac_1_data <= 'h0;
-      dac_2_data <= 'h0;
-      dac_3_data <= 'h0;
-    end else begin
-      if (change_dac_0_data) begin
-        dac_0_data <= {~delay_dac_0_data[15], delay_dac_0_data[14:0]};
-      end
-      if (change_dac_1_data) begin
-        dac_1_data <= {~delay_dac_1_data[15], delay_dac_1_data[14:0]};
-      end
-      if (change_dac_2_data) begin
-        dac_2_data <= {~delay_dac_2_data[15], delay_dac_2_data[14:0]};
-      end
-      if (change_dac_3_data) begin
-        dac_3_data <= {~delay_dac_3_data[15], delay_dac_3_data[14:0]};
-      end
-    end
-  end
-
-  assign dac_1_0_data = {dac_1_data, dac_0_data};
-  assign dac_3_2_data = {dac_3_data, dac_2_data};
+  // ila probes
+  // assign dbg_adc_0_threshold = adc_threshold[0];
+  // assign dbg_dac_0_min_value = dac_min_value[0];
+  // assign dbg_dac_0_max_value = dac_max_value[0];
+  // assign dbg_adc_0_delay_prescaler = adc_delay_prescaler[0];
+  // assign dbg_adc_0_delay_cnt = adc_delay_cnt[0];
+  // assign dbg_dac_0_bypass_mux = dac_bypass_mux[0];
+  // assign dbg_resetn = resetn;
+  // assign dbg_adc_0_threshold_passed = adc_threshold_passed[0];
+  // assign dbg_adc_0_delay_cnt_en = adc_delay_cnt_en[0];
 
 endmodule
