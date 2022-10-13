@@ -59,7 +59,10 @@ module axi_hil #(
   // output      [ 0:0]                  dbg_resetn,
   // output      [ 0:0]                  dbg_adc_0_threshold_passed,
   // output      [ 0:0]                  dbg_adc_0_delay_cnt_en,
-
+  // output      [ 0:0]                  dbg_adc_0_valid,
+  // output      [ 0:0]                  dbg_adc_1_valid,
+  // output      [ 0:0]                  dbg_adc_2_valid,
+  // output      [ 0:0]                  dbg_adc_3_valid,
 
   //axi interface
   input                               s_axi_aclk,
@@ -119,7 +122,7 @@ module axi_hil #(
   reg    [15:0]   delay_dac_data        [3:0];
   reg             adc_input_change      [3:0];
   reg             adc_input_change_d1   [3:0];
-  reg             adc_input_change_d2   [3:0];
+//reg             adc_input_change_d2   [3:0];
   
 
   up_axi #(
@@ -159,24 +162,28 @@ module axi_hil #(
     .CORE_VERSION (CORE_VERSION),
     .ADC_0_THRESHOLD (16'h2000),
     .ADC_1_THRESHOLD (0),
-    .ADC_2_THRESHOLD (0),
+    .ADC_2_THRESHOLD (16'h2000),
     .ADC_3_THRESHOLD (0),
-    .ADC_0_DELAY_PRESCALER (32'h00B71B00),
+    .ADC_0_DELAY_PRESCALER (32'h1),
     .ADC_1_DELAY_PRESCALER (0),
-    .ADC_2_DELAY_PRESCALER (0),
+    .ADC_2_DELAY_PRESCALER (32'h00B71B00),
     .ADC_3_DELAY_PRESCALER (0),
     .DAC_0_MIN_VALUE (16'h4639),
     .DAC_1_MIN_VALUE (0),
-    .DAC_2_MIN_VALUE (0),
+    .DAC_2_MIN_VALUE (16'h4639),
     .DAC_3_MIN_VALUE (0),
     .DAC_0_MAX_VALUE (16'h0000),
     .DAC_1_MAX_VALUE (0),
-    .DAC_2_MAX_VALUE (0),
+    .DAC_2_MAX_VALUE (16'h0000),
     .DAC_3_MAX_VALUE (0),
-    .DAC_0_PULSE_PRESCALER (32'h00B71B00),
+    .DAC_0_PULSE_PRESCALER (32'h000927C0),
     .DAC_1_PULSE_PRESCALER (0),
-    .DAC_2_PULSE_PRESCALER (0),
-    .DAC_3_PULSE_PRESCALER (0)
+    .DAC_2_PULSE_PRESCALER (32'h000927C0),
+    .DAC_3_PULSE_PRESCALER (0),
+    .DAC_0_BYPASS_MUX (0),
+    .DAC_1_BYPASS_MUX (0),
+    .DAC_2_BYPASS_MUX (0),
+    .DAC_3_BYPASS_MUX (0)
   ) i_regmap (
     .ext_clk (sampling_clk),
     .resetn (resetn),
@@ -215,44 +222,59 @@ module axi_hil #(
     .up_rdata (up_rdata),
     .up_rack (up_rack));
 
-     //comparator logic
-  always @(*) begin
-    if (adc_0_valid && !adc_0_data[15] && adc_0_data >= adc_threshold[0]) begin
-      adc_input_change[0] <= 1'b1;
-    end else begin
+  //comparator logic
+  always @(posedge sampling_clk) begin
+    if (resetn == 1'b0) begin
       adc_input_change[0] <= 1'b0;
-    end
-    if (adc_1_valid && !adc_1_data[15] && adc_1_data >= adc_threshold[1]) begin
-      adc_input_change[1] <= 1'b1;
-    end else begin
       adc_input_change[1] <= 1'b0;
-    end
-    if (adc_2_valid && !adc_2_data[15] && adc_2_data >= adc_threshold[2]) begin
-      adc_input_change[2] <= 1'b1;
-    end else begin
       adc_input_change[2] <= 1'b0;
-    end
-    if (adc_3_valid && !adc_3_data[15] && adc_3_data >= adc_threshold[3]) begin
-      adc_input_change[3] <= 1'b1;
-    end else begin
       adc_input_change[3] <= 1'b0;
+    end else begin
+      if (adc_0_valid) begin
+        if (!adc_0_data[15] && adc_0_data >= adc_threshold[0]) begin
+          adc_input_change[0] <= 1'b1;
+        end else begin
+          adc_input_change[0] <= 1'b0;
+        end
+      end
+      if (adc_1_valid) begin
+        if (!adc_1_data[15] && adc_1_data >= adc_threshold[1]) begin
+          adc_input_change[1] <= 1'b1;
+        end else begin
+          adc_input_change[1] <= 1'b0;
+        end
+      end
+      if (adc_2_valid) begin
+        if (!adc_2_data[15] && adc_2_data >= adc_threshold[2]) begin
+          adc_input_change[2] <= 1'b1;
+        end else begin
+          adc_input_change[2] <= 1'b0;
+        end
+      end
+      if (adc_3_valid) begin
+        if (!adc_3_data[15] && adc_3_data >= adc_threshold[3]) begin
+          adc_input_change[3] <= 1'b1;
+        end else begin
+          adc_input_change[3] <= 1'b0;
+        end
+      end
     end
   end
 
   genvar i;
   generate
     for (i=0; i < 4; i=i+1) begin
-      assign adc_threshold_passed[i] = !adc_input_change_d2[i] && adc_input_change_d1[i];
+      assign adc_threshold_passed[i] = !adc_input_change_d1[i] && adc_input_change[i];
       
       always @(posedge sampling_clk) begin
         if (resetn == 1'b0) begin
-          adc_input_change_d2[i] <= 1'b0;
+          // adc_input_change_d2[i] <= 1'b0;
           adc_input_change_d1[i] <= 1'b0;
           adc_delay_cnt_en[i] <= 1'b0;
           dac_pulse_cnt_en[i] <= 1'b0;
         end else begin
           adc_input_change_d1[i] <= adc_input_change[i];
-          adc_input_change_d2[i] <= adc_input_change_d1[i];
+          // adc_input_change_d2[i] <= adc_input_change_d1[i];
           if (!adc_delay_cnt_en[i] && adc_threshold_passed[i]) begin
             adc_delay_cnt_en[i] <= 1'b1;
           end
@@ -295,7 +317,8 @@ module axi_hil #(
   assign dac_data[2] = (dac_bypass_mux[2])? {~adc_2_data[15], adc_2_data[14:0]} : {~delay_dac_data[2][15], delay_dac_data[2][14:0]};
   assign dac_data[3] = (dac_bypass_mux[3])? {~adc_3_data[15], adc_3_data[14:0]} : {~delay_dac_data[3][15], delay_dac_data[3][14:0]};
 
-  assign dac_1_0_data = {dac_data[1], dac_data[0]};
+  // assign dac_1_0_data = {dac_data[1], dac_data[0]};
+  assign dac_1_0_data = {dac_data[2], dac_data[0]}; // ADC CHC -> CHB DAC by Miguel's request
   assign dac_3_2_data = {dac_data[3], dac_data[2]};
 
   // ila probes
@@ -308,5 +331,9 @@ module axi_hil #(
   // assign dbg_resetn = resetn;
   // assign dbg_adc_0_threshold_passed = adc_threshold_passed[0];
   // assign dbg_adc_0_delay_cnt_en = adc_delay_cnt_en[0];
+  // assign dbg_adc_0_valid = adc_0_valid;
+  // assign dbg_adc_1_valid = adc_1_valid;
+  // assign dbg_adc_2_valid = adc_2_valid;
+  // assign dbg_adc_3_valid = adc_3_valid;
 
 endmodule

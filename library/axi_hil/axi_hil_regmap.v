@@ -57,7 +57,11 @@ module axi_hil_regmap #(
     parameter DAC_0_PULSE_PRESCALER = 0,
     parameter DAC_1_PULSE_PRESCALER = 0,
     parameter DAC_2_PULSE_PRESCALER = 0,
-    parameter DAC_3_PULSE_PRESCALER = 0
+    parameter DAC_3_PULSE_PRESCALER = 0,
+    parameter DAC_0_BYPASS_MUX = 0,
+    parameter DAC_1_BYPASS_MUX = 0,
+    parameter DAC_2_BYPASS_MUX = 0,
+    parameter DAC_3_BYPASS_MUX = 0
 )(
   input                   ext_clk,
 
@@ -156,10 +160,10 @@ module axi_hil_regmap #(
       up_dac_1_max_value <= DAC_1_MAX_VALUE;
       up_dac_2_max_value <= DAC_2_MAX_VALUE;
       up_dac_3_max_value <= DAC_3_MAX_VALUE;
-      up_dac_0_bypass_mux <= 1'b0;
-      up_dac_1_bypass_mux <= 1'b0;
-      up_dac_2_bypass_mux <= 1'b0;
-      up_dac_3_bypass_mux <= 1'b0;
+      up_dac_0_bypass_mux <= DAC_0_BYPASS_MUX;
+      up_dac_1_bypass_mux <= DAC_1_BYPASS_MUX;
+      up_dac_2_bypass_mux <= DAC_2_BYPASS_MUX;
+      up_dac_3_bypass_mux <= DAC_3_BYPASS_MUX;
       up_dac_0_pulse_prescaler <= DAC_0_PULSE_PRESCALER;
       up_dac_1_pulse_prescaler <= DAC_1_PULSE_PRESCALER;
       up_dac_2_pulse_prescaler <= DAC_2_PULSE_PRESCALER;

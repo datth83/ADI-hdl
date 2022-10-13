@@ -470,7 +470,7 @@ ad_cpu_interconnect 0x44ef0000 axi_hil
 #ad_ip_parameter ila_adc CONFIG.C_TRIGIN_EN false
 #ad_ip_parameter ila_adc CONFIG.C_EN_STRG_QUAL 1
 #ad_ip_parameter ila_adc CONFIG.C_DATA_DEPTH 8192
-#ad_ip_parameter ila_adc CONFIG.C_NUM_OF_PROBES 15
+#ad_ip_parameter ila_adc CONFIG.C_NUM_OF_PROBES 19
 #
 #ad_ip_parameter ila_adc CONFIG.C_PROBE0_WIDTH 16
 #ad_ip_parameter ila_adc CONFIG.C_PROBE1_WIDTH 16
@@ -487,6 +487,10 @@ ad_cpu_interconnect 0x44ef0000 axi_hil
 #ad_ip_parameter ila_adc CONFIG.C_PROBE12_WIDTH 1
 #ad_ip_parameter ila_adc CONFIG.C_PROBE13_WIDTH 1
 #ad_ip_parameter ila_adc CONFIG.C_PROBE14_WIDTH 1
+#ad_ip_parameter ila_adc CONFIG.C_PROBE15_WIDTH 1
+#ad_ip_parameter ila_adc CONFIG.C_PROBE16_WIDTH 1
+#ad_ip_parameter ila_adc CONFIG.C_PROBE17_WIDTH 1
+#ad_ip_parameter ila_adc CONFIG.C_PROBE18_WIDTH 1
 #
 #ad_connect  sampling_clk ila_adc/clk
 #ad_connect  axi_ltc2387_0_adc_data ila_adc/probe0
@@ -504,3 +508,7 @@ ad_cpu_interconnect 0x44ef0000 axi_hil
 #ad_connect  axi_hil/dbg_resetn ila_adc/probe12
 #ad_connect  axi_hil/dbg_adc_0_threshold_passed ila_adc/probe13
 #ad_connect  axi_hil/dbg_adc_0_delay_cnt_en ila_adc/probe14
+#ad_connect  axi_hil/dbg_adc_0_valid ila_adc/probe15
+#ad_connect  axi_hil/dbg_adc_1_valid ila_adc/probe16
+#ad_connect  axi_hil/dbg_adc_2_valid ila_adc/probe17
+#ad_connect  axi_hil/dbg_adc_3_valid ila_adc/probe18
