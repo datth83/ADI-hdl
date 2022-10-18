@@ -38,6 +38,8 @@
 module axi_ad9684_if #(
 
   parameter FPGA_TECHNOLOGY = 0,
+  parameter IODELAY_ENABLE = 1,
+  parameter IODELAY_CTRL = 1,
   parameter IO_DELAY_GROUP = "dev_if_delay_group",
   parameter OR_STATUS = 0
 ) (
@@ -108,6 +110,7 @@ module axi_ad9684_if #(
 
   ad_serdes_in #(
     .FPGA_TECHNOLOGY(FPGA_TECHNOLOGY),
+    .IODELAY_ENABLE (IODELAY_ENABLE),
     .IODELAY_CTRL(1),
     .IODELAY_GROUP(IO_DELAY_GROUP),
     .DDR_OR_SDR_N(DDR_OR_SDR_N),
@@ -141,6 +144,7 @@ module axi_ad9684_if #(
 
     ad_serdes_in #(
       .FPGA_TECHNOLOGY(FPGA_TECHNOLOGY),
+      .IODELAY_ENABLE (IODELAY_ENABLE),
       .IODELAY_CTRL(0),
       .IODELAY_GROUP(IO_DELAY_GROUP),
       .DDR_OR_SDR_N(DDR_OR_SDR_N),
