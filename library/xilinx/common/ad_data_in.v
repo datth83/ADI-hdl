@@ -1,6 +1,6 @@
 // ***************************************************************************
 // ***************************************************************************
-// Copyright 2014 - 2017 (c) Analog Devices, Inc. All rights reserved.
+// Copyright 2014 - 2022 (c) Analog Devices, Inc. All rights reserved.
 //
 // In this HDL repository, there are many different and unique modules, consisting
 // of various HDL (Verilog or VHDL) components. The individual modules are
@@ -109,7 +109,7 @@ module ad_data_in #(
   // ibuf
 
   generate
-  if (SINGLE_ENDED == 1) begin
+  if (SINGLE_ENDED) begin
     IBUF i_rx_data_ibuf (
       .I (rx_data_in_p),
       .O (rx_data_ibuf_s));
@@ -127,27 +127,27 @@ module ad_data_in #(
   if (IODELAY_FPGA_TECHNOLOGY == SEVEN_SERIES) begin
     (* IODELAY_GROUP = IODELAY_GROUP *)
     IDELAYE2 #(
-      .CINVCTRL_SEL ("FALSE"),
-      .DELAY_SRC ("IDATAIN"),
-      .HIGH_PERFORMANCE_MODE ("FALSE"),
-      .IDELAY_TYPE ("VAR_LOAD"),
-      .IDELAY_VALUE (0),
-      .REFCLK_FREQUENCY (REFCLK_FREQUENCY),
-      .PIPE_SEL ("FALSE"),
-      .SIGNAL_PATTERN ("DATA")
+      .CINVCTRL_SEL ("FALSE"),              // Enable dynamic clock inversion (FALSE, TRUE)
+      .DELAY_SRC ("IDATAIN"),               // Delay input (IDATAIN, DATAIN)
+      .HIGH_PERFORMANCE_MODE ("FALSE"),     // Reduced jitter ("TRUE"), Reduced power ("FALSE")
+      .IDELAY_TYPE ("VAR_LOAD"),            // FIXED, VARIABLE, VAR_LOAD, VAR_LOAD_PIPE
+      .IDELAY_VALUE (0),                    // Input delay tap setting (0-31)
+      .PIPE_SEL ("FALSE"),                  // Select pipelined mode, FALSE, TRUE
+      .REFCLK_FREQUENCY (REFCLK_FREQUENCY), // IDELAYCTRL clock input frequency in MHz (190.0-210.0, 290.0-310.0)
+      .SIGNAL_PATTERN ("DATA")              // DATA, CLOCK input signal
     ) i_rx_data_idelay (
-      .CE (1'b0),
-      .INC (1'b0),
-      .DATAIN (1'b0),
-      .LDPIPEEN (1'b0),
-      .CINVCTRL (1'b0),
-      .REGRST (1'b0),
-      .C (up_clk),
-      .IDATAIN (rx_data_ibuf_s),
-      .DATAOUT (rx_data_idelay_s),
-      .LD (up_dld),
-      .CNTVALUEIN (up_dwdata),
-      .CNTVALUEOUT (up_drdata));
+      .CE (1'b0),                  // 1-bit input: Active high enable increment/decrement input
+      .INC (1'b0),                 // 1-bit input: Increment / Decrement tap delay input
+      .DATAIN (1'b0),              // 1-bit input: Internal delay data input
+      .LDPIPEEN (1'b0),            // 1-bit input: Enable PIPELINE register to load data input
+      .CINVCTRL (1'b0),            // 1-bit input: Dynamic clock inversion input
+      .REGRST (1'b0),              // 1-bit input: Active-high reset tap-delay input
+      .C (up_clk),                 // 1-bit input: Clock input
+      .IDATAIN (rx_data_ibuf_s),   // 1-bit input: Data input from the I/O
+      .DATAOUT (rx_data_idelay_s), // 1-bit output: Delayed data output
+      .LD (up_dld),                // 1-bit input: Load IDELAY_VALUE input
+      .CNTVALUEIN (up_dwdata),     // 5-bit input: Counter value input
+      .CNTVALUEOUT (up_drdata));   // 5-bit output: Counter value output
   end
   endgenerate
 
@@ -215,8 +215,8 @@ module ad_data_in #(
   if ((FPGA_TECHNOLOGY == ULTRASCALE) || (FPGA_TECHNOLOGY == ULTRASCALE_PLUS)) begin
     IDDRE1 #(
       .DDR_CLK_EDGE (IDDR_CLK_EDGE), // IDDRE1 mode (OPPOSITE_EDGE, SAME_EDGE, SAME_EDGE_PIPELINED)
-      .IS_CB_INVERTED (1'b0),         // Optional inversion for CB
-      .IS_C_INVERTED (1'b0)           // Optional inversion for C
+      .IS_CB_INVERTED (1'b0),        // Optional inversion for CB
+      .IS_C_INVERTED (1'b0)          // Optional inversion for C
     ) i_rx_data_iddr (
       .R (1'b0),             // 1-bit output: Registered parallel output 1
       .C (rx_clk),           // 1-bit output: Registered parallel output 2

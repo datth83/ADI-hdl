@@ -146,27 +146,28 @@ module ad_data_out #(
   if (IODELAY_FPGA_TECHNOLOGY == SEVEN_SERIES) begin
     (* IODELAY_GROUP = IODELAY_GROUP *)
     ODELAYE2 #(
-      .CINVCTRL_SEL ("FALSE"),
-      .DELAY_SRC ("ODATAIN"),
-      .HIGH_PERFORMANCE_MODE ("FALSE"),
-      .ODELAY_TYPE ("VAR_LOAD"),
-      .ODELAY_VALUE (0),
-      .REFCLK_FREQUENCY (REFCLK_FREQUENCY),
-      .PIPE_SEL ("FALSE"),
-      .SIGNAL_PATTERN ("DATA")
+      .CINVCTRL_SEL ("FALSE"),              // Enable dynamic clock inversion (FALSE, TRUE)
+      .DELAY_SRC ("ODATAIN"),               // Delay input (ODATAIN, CLKIN)
+      .HIGH_PERFORMANCE_MODE ("FALSE"),     // Reduced jitter ("TRUE"), Reduced power ("FALSE")
+      .ODELAY_TYPE ("VAR_LOAD"),            // FIXED, VARIABLE, VAR_LOAD, VAR_LOAD_PIPE
+      .ODELAY_VALUE (0),                    // Output delay tap setting (0-31)
+      .PIPE_SEL ("FALSE"),                  // Select pipelined mode, FALSE, TRUE
+      .REFCLK_FREQUENCY (REFCLK_FREQUENCY), // IDELAYCTRL clock input frequency in MHz (190.0-210.0, 290.0-310.0)
+      .SIGNAL_PATTERN ("DATA")              // DATA, CLOCK input signal
     ) i_tx_data_odelay (
-      .CE (1'b0),
-      .CLKIN (1'b0),
-      .INC (1'b0),
-      .LDPIPEEN (1'b0),
-      .CINVCTRL (1'b0),
-      .REGRST (1'b0),
-      .C (up_clk),
-      .ODATAIN (tx_data_oddr_s),
-      .DATAOUT (tx_data_odelay_s),
-      .LD (up_dld),
-      .CNTVALUEIN (up_dwdata),
-      .CNTVALUEOUT (up_drdata));
+      .CE (1'b0),                  // 1-bit input: Active high enable increment/decrement input
+      .CLKIN (1'b0),               // 1-bit input: Clock delay input
+      .INC (1'b0),                 // 1-bit input: Increment / Decrement tap delay input
+      .LDPIPEEN (1'b0),            // 1-bit input: Enables the pipeline register to load data
+      .CINVCTRL (1'b0),            // 1-bit input: Dynamic clock inversion input
+      .REGRST (1'b0),              // 1-bit input: Active-high reset tap-delay input
+      .C (up_clk),                 // 1-bit input: Clock input
+      .ODATAIN (tx_data_oddr_s),   // 1-bit input: Output delay data input
+      .DATAOUT (tx_data_odelay_s), // 1-bit output: Delayed data/clock output
+      .LD (up_dld),                // 1-bit input: Loads ODELAY_VALUE tap delay in VARIABLE mode, in VAR_LOAD or
+                                   // VAR_LOAD_PIPE mode, loads the value of CNTVALUEIN
+      .CNTVALUEIN (up_dwdata),     // 5-bit input: Counter value input
+      .CNTVALUEOUT (up_drdata));   // 5-bit output: Counter value output
   end
   endgenerate
 
@@ -175,29 +176,29 @@ module ad_data_out #(
 
     (* IODELAY_GROUP = IODELAY_GROUP *)
     ODELAYE3 #(
-      .CASCADE ("NONE"),
-      .DELAY_FORMAT ("COUNT"),
-      .DELAY_TYPE ("VAR_LOAD"),
-      .DELAY_VALUE (0),
-      .IS_CLK_INVERTED (1'b0),
-      .IS_RST_INVERTED (1'b0),
-      .REFCLK_FREQUENCY (REFCLK_FREQUENCY),
-      .SIM_DEVICE (IODELAY_SIM_DEVICE),
-      .UPDATE_MODE ("ASYNC")
+      .CASCADE ("NONE"),                    // Cascade setting (MASTER, NONE, SLAVE_END, SLAVE_MIDDLE)
+      .DELAY_FORMAT ("COUNT"),              // (COUNT, TIME)
+      .DELAY_TYPE ("VAR_LOAD"),             // Set the type of tap delay line (FIXED, VARIABLE, VAR_LOAD)
+      .DELAY_VALUE (0),                     // Output delay tap setting
+      .IS_CLK_INVERTED (1'b0),              // Optional inversion for CLK
+      .IS_RST_INVERTED (1'b0),              // Optional inversion for RST
+      .REFCLK_FREQUENCY (REFCLK_FREQUENCY), // IDELAYCTRL clock input frequency in MHz (200.0-800.0)
+      .SIM_DEVICE (IODELAY_SIM_DEVICE),     // Set the device version for simulation functionality (ULTRASCALE)
+      .UPDATE_MODE ("ASYNC")                // Determines when updates to the delay will take effect (ASYNC, MANUAL, SYNC)
     ) i_tx_data_odelay (
-      .CASC_RETURN (1'b0),
-      .CASC_IN (1'b0),
-      .CASC_OUT (),
-      .CE (1'b0),
-      .CLK (up_clk),
-      .INC (1'b0),
-      .LOAD (up_dld),
-      .CNTVALUEIN (up_dwdata),
-      .CNTVALUEOUT (up_drdata),
-      .ODATAIN (tx_data_oddr_s),
-      .DATAOUT (tx_data_odelay_s),
-      .RST (1'b0),
-      .EN_VTC (~up_dld));
+      .CASC_RETURN (1'b0),         // 1-bit input: Cascade delay returning from slave IDELAY DATAOUT
+      .CASC_IN (1'b0),             // 1-bit input: Cascade delay input from slave IDELAY CASCADE_OUT
+      .CASC_OUT (),                // 1-bit output: Cascade delay output to IDELAY input cascade
+      .CE (1'b0),                  // 1-bit input: Active-High enable increment/decrement input
+      .CLK (up_clk),               // 1-bit input: Clock input
+      .INC (1'b0),                 // 1-bit input: Increment/Decrement tap delay input
+      .LOAD (up_dld),              // 1-bit input: Load DELAY_VALUE input
+      .CNTVALUEIN (up_dwdata),     // 9-bit input: Counter value input
+      .CNTVALUEOUT (up_drdata),    // 9-bit output: Counter value output
+      .ODATAIN (tx_data_oddr_s),   // 1-bit input: Data input
+      .DATAOUT (tx_data_odelay_s), // 1-bit output: Delayed data from ODATAIN input port
+      .RST (1'b0),                 // 1-bit input: Asynchronous Reset to the DELAY_VALUE
+      .EN_VTC (~up_dld));          // 1-bit input: Keep delay constant over VT
   end
   endgenerate
 
@@ -211,7 +212,7 @@ module ad_data_out #(
   // obuf
 
   generate
-  if (SINGLE_ENDED == 1) begin
+  if (SINGLE_ENDED) begin
     assign tx_data_out_n = 1'b0;
     OBUF i_tx_data_obuf (
       .I (tx_data_odelay_s),
