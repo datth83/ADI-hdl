@@ -2,13 +2,11 @@ source ../../../scripts/adi_env.tcl
 source $ad_hdl_dir/projects/scripts/adi_project_xilinx.tcl
 source $ad_hdl_dir/projects/scripts/adi_board.tcl
 
-set project_name [get_env_param ADI_PROJECT_NAME adv7511_zc706]
-
-adi_project $project_name
-adi_project_files $project_name [list \
+adi_project adv7511_zc706
+adi_project_files adv7511_zc706 [list \
   "system_top.v" \
   "$ad_hdl_dir/projects/common/zc706/zc706_system_constr.xdc" \
   "$ad_hdl_dir/library/common/ad_iobuf.v"]
 
-adi_project_run $project_name
+adi_project_run adv7511_zc706
 

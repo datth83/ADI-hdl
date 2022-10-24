@@ -29,30 +29,28 @@ if {[info exists ::env(INTF_CFG)]} {
   set env(INTF_CFG) $intf
 }
 
-set project_name [get_env_param ADI_PROJECT_NAME cn0506_zcu102]
-
-adi_project $project_name 0 [list \
+adi_project cn0506_zcu102 0 [list \
   INTF_CFG  $intf \
 ]
 
-adi_project_files $project_name [list \
+adi_project_files cn0506_zcu102 [list \
   "$ad_hdl_dir/projects/common/zcu102/zcu102_system_constr.xdc" \
   "system_constr.tcl"
   ]
 
 switch $intf {
   MII {
-    adi_project_files $project_name [list \
+    adi_project_files cn0506_zcu102 [list \
       "system_top_mii.v" ]
   }
   RGMII {
-    adi_project_files $project_name [list \
+    adi_project_files cn0506_zcu102 [list \
       "system_top_rgmii.v" ]
   }
   RMII {
-    adi_project_files $project_name [list \
+    adi_project_files cn0506_zcu102 [list \
       "system_top_rmii.v" ]
   }
 }
 
-adi_project_run $project_name
+adi_project_run cn0506_zcu102

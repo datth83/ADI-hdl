@@ -29,9 +29,7 @@ source $ad_hdl_dir/projects/scripts/adi_board.tcl
 #  !!! For this carrier only 8B10B mode is supported !!!
 #
 
-set project_name [get_env_param ADI_PROJECT_NAME ad9081_fmca_ebz_zc706]
-
-adi_project $project_name 0 [list \
+adi_project ad9081_fmca_ebz_zc706 0 [list \
   JESD_MODE    8B10B \
   RX_LANE_RATE [get_env_param RX_LANE_RATE      10 ] \
   TX_LANE_RATE [get_env_param TX_LANE_RATE      10 ] \
@@ -47,7 +45,7 @@ adi_project $project_name 0 [list \
   TX_NUM_LINKS [get_env_param TX_NUM_LINKS       1 ] \
 ]
 
-adi_project_files $project_name [list \
+adi_project_files ad9081_fmca_ebz_zc706 [list \
   "system_top.v" \
   "system_constr.xdc"\
   "timing_constr.xdc"\
@@ -55,5 +53,5 @@ adi_project_files $project_name [list \
   "$ad_hdl_dir/library/common/ad_iobuf.v" \
   "$ad_hdl_dir/projects/common/zc706/zc706_system_constr.xdc" ]
 
-adi_project_run $project_name
+adi_project_run ad9081_fmca_ebz_zc706
 

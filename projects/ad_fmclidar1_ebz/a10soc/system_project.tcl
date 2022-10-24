@@ -1,9 +1,7 @@
 source ../../../scripts/adi_env.tcl
 source ../../scripts/adi_project_intel.tcl
 
-set project_name [get_env_param ADI_PROJECT_NAME ad_fmclidar1_ebz_a10soc]
-
-adi_project $project_name
+adi_project ad_fmclidar1_ebz_a10soc
 
 source $ad_hdl_dir/projects/common/a10soc/a10soc_system_assign.tcl
 

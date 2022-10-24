@@ -25,9 +25,7 @@ source ../../scripts/adi_project_intel.tcl
 #   [RX/TX]_KS_PER_CHANNEL : Number of samples stored in internal buffers in kilosamples per converter (M)
 #
 
-set project_name [get_env_param ADI_PROJECT_NAME ad9081_fmca_ebz_a10soc]
-
-adi_project $project_name [list \
+adi_project ad9081_fmca_ebz_a10soc [list \
   RX_LANE_RATE       [get_env_param RX_LANE_RATE      10 ] \
   TX_LANE_RATE       [get_env_param TX_LANE_RATE      10 ] \
   RX_JESD_M          [get_env_param RX_JESD_M          8 ] \

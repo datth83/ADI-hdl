@@ -3,9 +3,7 @@ set QUARTUS_PRO_ISUSED 0
 source ../../../scripts/adi_env.tcl
 source ../../scripts/adi_project_intel.tcl
 
-set project_name [get_env_param ADI_PROJECT_NAME arradio_c5soc]
-
-adi_project $project_name
+adi_project arradio_c5soc
 
 source $ad_hdl_dir/projects/common/c5soc/c5soc_system_assign.tcl
 

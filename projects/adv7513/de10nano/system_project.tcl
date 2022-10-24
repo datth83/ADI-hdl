@@ -3,9 +3,7 @@ set QUARTUS_PRO_ISUSED 0
 source ../../../scripts/adi_env.tcl
 source ../../scripts/adi_project_intel.tcl
 
-set project_name [get_env_param ADI_PROJECT_NAME adv7513_de10nano]
-
-adi_project $project_name
+adi_project adv7513_de10nano
 
 source $ad_hdl_dir/projects/common/de10nano/de10nano_system_assign.tcl
 

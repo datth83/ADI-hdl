@@ -37,7 +37,7 @@ source $ad_hdl_dir/projects/common/a10soc/a10soc_system_qsys.tcl
 source $ad_hdl_dir/projects/common/a10soc/a10soc_plddr4_dacfifo_qsys.tcl
 
 if [info exists ad_project_dir] {
- source ../../common/dac_fmc_ebz_qsys.tcl
+  source ../../common/dac_fmc_ebz_qsys.tcl
 } else {
   source ../common/dac_fmc_ebz_qsys.tcl
 }

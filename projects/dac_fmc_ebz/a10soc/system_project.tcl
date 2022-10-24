@@ -34,9 +34,7 @@ source ../../scripts/adi_project_intel.tcl
 
 source ../common/config.tcl
 
-set project_name [get_env_param ADI_PROJECT_NAME dac_fmc_ebz_a10soc]
-
-adi_project $project_name [list \
+adi_project dac_fmc_ebz_a10soc [list \
   JESD_L        [get_config_param L] \
   MODE          $mode \
   DEVICE        $device \
