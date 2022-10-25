@@ -38,11 +38,17 @@
 module ad_data_in #(
   parameter   SINGLE_ENDED = 0,
   parameter   FPGA_TECHNOLOGY = 0,
-  parameter   IDDR_CLK_EDGE ="SAME_EDGE",
+  parameter   IDDR_CLK_EDGE = "SAME_EDGE",
+  // for 7 series devices
+  parameter   IDELAY_TYPE = "VAR_LOAD",
+  // for ultrascale devices
+  parameter   DELAY_FORMAT = "COUNT",
+  parameter   US_DELAY_TYPE = "VAR_LOAD",
+  // for all
   parameter   IODELAY_ENABLE = 1,
   parameter   IODELAY_CTRL = 0,
   parameter   IODELAY_GROUP = "dev_if_delay_group",
-  parameter   REFCLK_FREQUENCY = 200
+  parameter   REFCLK_FREQUENCY = 300
 ) (
 
   // data interface
@@ -69,18 +75,30 @@ module ad_data_in #(
 
   // internal parameters
 
-  localparam  NONE = -1;
+  localparam  NONE = 0;
   localparam  SEVEN_SERIES = 1;
   localparam  ULTRASCALE = 2;
   localparam  ULTRASCALE_PLUS = 3;
 
-  localparam  IODELAY_CTRL_ENABLED = (IODELAY_ENABLE == 1) ? IODELAY_CTRL : 0;
+  //localparam  IDELAYCTRL_ENABLED = (IODELAY_ENABLE == 1) ? IODELAY_CTRL : 0;
   localparam  IODELAY_CTRL_SIM_DEVICE = (FPGA_TECHNOLOGY == ULTRASCALE_PLUS) ? "ULTRASCALE" :
     (FPGA_TECHNOLOGY == ULTRASCALE) ? "ULTRASCALE" : "7SERIES";
 
   localparam  IODELAY_FPGA_TECHNOLOGY = (IODELAY_ENABLE == 1) ? FPGA_TECHNOLOGY : NONE;
   localparam  IODELAY_SIM_DEVICE = (FPGA_TECHNOLOGY == ULTRASCALE_PLUS) ? "ULTRASCALE_PLUS" :
     (FPGA_TECHNOLOGY == ULTRASCALE) ? "ULTRASCALE" : "7SERIES";
+  localparam  IDELAYCTRL_ENABLED = (IODELAY_SIM_DEVICE == "7SERIES") ? 1 : (DELAY_FORMAT == "COUNT") 1 : 0;
+/*
+* For 7 series, IDELAYCTRL is enabled in the following situations:
+  * when IDELAY_TYPE = FIXED
+  * when IDELAY_TYPE = VARIABLE
+  * when IDELAY_TYPE = VAR_LOAD
+  **/
+
+ /*
+ * For UltraScale, IDELAYCTRL is enabled in the following situations:
+   * when DELAY_FORMAT = TIME
+   **/
 
   // internal signals
 
@@ -91,9 +109,7 @@ module ad_data_in #(
   // delay controller
 
   generate
-  if (IODELAY_CTRL_ENABLED == 0) begin
-    assign delay_locked = 1'b1;
-  end else begin
+  if (IDELAYCTRL_ENABLED) begin
     (* IODELAY_GROUP = IODELAY_GROUP *)
     IDELAYCTRL #(
       .SIM_DEVICE (IODELAY_CTRL_SIM_DEVICE)
@@ -101,7 +117,8 @@ module ad_data_in #(
       .RST (delay_rst),
       .REFCLK (delay_clk),
       .RDY (delay_locked));
-  end
+  end else begin
+    assign delay_locked = 1'b1;
   endgenerate
 
   // receive data interface, ibuf -> idelay -> iddr
@@ -130,7 +147,7 @@ module ad_data_in #(
       .CINVCTRL_SEL ("FALSE"),              // Enable dynamic clock inversion (FALSE, TRUE)
       .DELAY_SRC ("IDATAIN"),               // Delay input (IDATAIN, DATAIN)
       .HIGH_PERFORMANCE_MODE ("FALSE"),     // Reduced jitter ("TRUE"), Reduced power ("FALSE")
-      .IDELAY_TYPE ("VAR_LOAD"),            // FIXED, VARIABLE, VAR_LOAD, VAR_LOAD_PIPE
+      .IDELAY_TYPE (IDELAY_TYPE),           // FIXED, VARIABLE, VAR_LOAD, VAR_LOAD_PIPE
       .IDELAY_VALUE (0),                    // Input delay tap setting (0-31)
       .PIPE_SEL ("FALSE"),                  // Select pipelined mode, FALSE, TRUE
       .REFCLK_FREQUENCY (REFCLK_FREQUENCY), // IDELAYCTRL clock input frequency in MHz (190.0-210.0, 290.0-310.0)
@@ -157,9 +174,9 @@ module ad_data_in #(
     (* IODELAY_GROUP = IODELAY_GROUP *)
     IDELAYE3 #(
       .CASCADE ("NONE"),                    // Cascade setting  (MASTER, NONE, SLAVE_END, SLAVE_MIDDLE)
-      .DELAY_FORMAT ("COUNT"),              // Units of the DELAY_VALUE  (COUNT, TIME)
+      .DELAY_FORMAT (DELAY_FORMAT),         // Units of the DELAY_VALUE  (COUNT, TIME)
       .DELAY_SRC ("IDATAIN"),               // Delay input  (DATAIN, IDATAIN)
-      .DELAY_TYPE ("VAR_LOAD"),             // Set the type of tap delay line  (FIXED, VARIABLE, VAR_LOAD)
+      .DELAY_TYPE (US_DELAY_TYPE),          // Set the type of tap delay line  (FIXED, VARIABLE, VAR_LOAD)
       .DELAY_VALUE (0),                     // Input delay value setting
       .IS_CLK_INVERTED (1'b0),              // Optional inversion for CLK
       .IS_RST_INVERTED (1'b0),              // Optional inversion for RST
