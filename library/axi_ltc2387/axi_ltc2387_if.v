@@ -181,8 +181,12 @@ module axi_ltc2387_if #(
   // data interface - differential to single ended
 
   ad_data_in #(
+    .SINGLE_ENDED (0),
     .FPGA_TECHNOLOGY (FPGA_TECHNOLOGY),
     .IDDR_CLK_EDGE ("OPPOSITE_EDGE"),
+    .IDELAY_TYPE (IDELAY_TYPE),
+    .DELAY_FORMAT (),
+    .US_DELAY_TYPE (),
     .IODELAY_CTRL (IODELAY_CTRL),
     .IODELAY_GROUP (IO_DELAY_GROUP),
     .REFCLK_FREQUENCY (DELAY_REFCLK_FREQUENCY)
@@ -201,8 +205,12 @@ module axi_ltc2387_if #(
     .delay_locked (delay_locked));
 
   ad_data_in #(
+    .SINGLE_ENDED (0),
     .FPGA_TECHNOLOGY (FPGA_TECHNOLOGY),
     .IDDR_CLK_EDGE ("OPPOSITE_EDGE"),
+    .IDELAY_TYPE (IDELAY_TYPE),
+    .DELAY_FORMAT (),
+    .US_DELAY_TYPE (),
     .IODELAY_CTRL (0),
     .IODELAY_GROUP (IO_DELAY_GROUP),
     .REFCLK_FREQUENCY (DELAY_REFCLK_FREQUENCY)
